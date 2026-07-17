@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿# qiankun micro frontend demo
 
 This folder contains four small projects:
@@ -86,3 +87,7 @@ location /benben-ranking-api/ {
 
 Netlify 部署已经通过根目录 `netlify.toml` 和构建产物中的 `_redirects` 配置同一条代理规则。
 修改后必须重新部署；直接访问 `/benben-ranking-api/servers.json` 应返回区服 JSON，而不是 Netlify 404 页面。
+=======
+# bbwg
+slg  layout planning
+>>>>>>> c23bac441e7b8d8a62caf786afbc49ec1c850aa9
