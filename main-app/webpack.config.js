@@ -1,0 +1,49 @@
+﻿const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require('path');
+
+class EmitNetlifyRedirectsPlugin {
+  apply(compiler) {
+    compiler.hooks.thisCompilation.tap('EmitNetlifyRedirectsPlugin', (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: 'EmitNetlifyRedirectsPlugin',
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+        },
+        () => {
+          compilation.emitAsset(
+            '_redirects',
+            new compiler.webpack.sources.RawSource('/benben-ranking-api/*  https://benbenkshen.cn/data/:splat  200!\n')
+          );
+        }
+      );
+    });
+  }
+}
+
+module.exports = {
+  entry: './src/index.js',
+  devtool: false,
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.[contenthash].js',
+    clean: true
+  },
+  module: {
+    rules: [
+      { test: /\.css$/, use: ['style-loader', 'css-loader'] }
+    ]
+  },
+  devServer: {
+    port: 8080,
+    historyApiFallback: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
+  },
+  plugins: [
+    new EmitNetlifyRedirectsPlugin(),
+    new HtmlWebpackPlugin({
+      template: './src/index.html'
+    })
+  ]
+};

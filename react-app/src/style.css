@@ -1,0 +1,31 @@
+﻿.react-page {
+  min-height: 520px;
+  padding: 48px;
+  background: #f8f1e7;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #8a4c16;
+  font-weight: 700;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 34px;
+}
+
+p {
+  max-width: 560px;
+  line-height: 1.7;
+}
+
+button {
+  margin-top: 18px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  background: #8a4c16;
+  cursor: pointer;
+}

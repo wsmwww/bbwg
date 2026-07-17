@@ -1,0 +1,86 @@
+
+> qiankun-vue-app@1.0.0 dev C:\Users\Administrator\Desktop\main-base\vue-app
+> webpack serve --mode development
+
+assets by path [1m[32m*.js[39m[22m 2.37 MiB
+  asset [1m[32mvendors-node_modules_fflate_esm_browser_js-node_modules_xlsx_xlsx_mjs.bundle.js[39m[22m 967 KiB [1m[32m[emitted][39m[22m (id hint: vendors)
+  asset [1m[32mbundle.js[39m[22m 783 KiB [1m[32m[emitted][39m[22m (name: main)
+  asset [1m[32msrc_LayoutPlanner_vue.bundle.js[39m[22m 553 KiB [1m[32m[emitted][39m[22m
+  asset [1m[32msrc_InfoStatistics_vue.bundle.js[39m[22m 70.5 KiB [1m[32m[emitted][39m[22m
+  asset [1m[32msrc_PowerComparison_vue.bundle.js[39m[22m 55.3 KiB [1m[32m[emitted][39m[22m
+asset [1m[32massets/map-series-bg-wide.png[39m[22m 655 KiB [1m[32m[emitted][39m[22m [from: src/assets/map-series-bg-wide.png] (auxiliary name: main)
+asset [1m[32mindex.html[39m[22m 287 bytes [1m[32m[emitted][39m[22m
+runtime modules 29.7 KiB 15 modules
+javascript modules 1.74 MiB
+  modules by path [1m./src/[39m[22m 289 KiB
+    modules by path [1m./src/*.vue[39m[22m 217 KiB 37 modules
+    modules by path [1m./src/*.js[39m[22m 5.82 KiB 3 modules
+    modules by path [1m./src/layout-planner/*.css[39m[22m 66.1 KiB
+      [1m./src/layout-planner/style.css[39m[22m 2.27 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+      ./node_modules/css-loader/dist/cjs.js![1m./src/layout-planner/style.css[39m[22m 63.8 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  modules by path [1m./node_modules/[39m[22m 1.45 MiB 38 modules
+asset modules 362 KiB (javascript) 655 KiB (asset)
+  [1m./src/assets/map-series-bg-wide.png[39m[22m 42 bytes (javascript) 655 KiB (asset) [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./src/layout-planner/script.js?raw[39m[22m 362 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 3427 ms
+assets by status 2.18 MiB [1m[32m[cached][39m[22m 4 assets
+assets by path [1m[32m.[39m[22m 886 KiB
+  assets by path [1m[32m*.js[39m[22m 886 KiB
+    assets by chunk 783 KiB (name: main)
+      asset [1m[32mbundle.js[39m[22m 783 KiB [1m[32m[emitted][39m[22m (name: main)
+      asset [1m[32mmain.8bc246e7c298a2ce5997.hot-update.js[39m[22m 288 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m (name: main)
+    asset [1m[32msrc_InfoStatistics_vue.bundle.js[39m[22m 73.8 KiB [1m[32m[emitted][39m[22m
+    asset [1m[32msrc_InfoStatistics_vue.8bc246e7c298a2ce5997.hot-update.js[39m[22m 28.9 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
+  asset [1m[32mindex.html[39m[22m 287 bytes [1m[32m[emitted][39m[22m
+  asset [1m[32mmain.8bc246e7c298a2ce5997.hot-update.json[39m[22m 53 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
+Entrypoint [1mmain[39m[22m 783 KiB (655 KiB) = [1m[32mbundle.js[39m[22m 783 KiB [1m[32mmain.8bc246e7c298a2ce5997.hot-update.js[39m[22m 288 bytes 1 auxiliary asset
+cached modules 2.05 MiB (javascript) 655 KiB (asset) [1m[32m[cached][39m[22m 78 modules
+runtime modules 29.7 KiB 15 modules
+javascript modules 40.8 KiB
+  [1m./src/InfoStatistics.vue[39m[22m 941 bytes [1m[33m[built][39m[22m
+  ./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[1]!./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=template&id=1a5a5fac&scoped=true[39m[22m 20.9 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  ./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=script&setup=true&lang=js[39m[22m 8.22 KiB [1m[33m[built][39m[22m
+  ./node_modules/css-loader/dist/cjs.js!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=style&index=0&id=1a5a5fac&scoped=true&lang=css[39m[22m 10.8 KiB [1m[33m[built][39m[22m
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 574 ms
+assets by status 1.23 MiB [1m[32m[cached][39m[22m 3 assets
+assets by path [1m[32m*.js[39m[22m 1.83 MiB
+  assets by chunk 967 KiB (id hint: vendors)
+    asset [1m[32mvendors-node_modules_xlsx_xlsx_mjs.bundle.js[39m[22m 877 KiB [1m[32m[emitted][39m[22m (id hint: vendors)
+    asset [1m[32mvendors-node_modules_fflate_esm_browser_js.bundle.js[39m[22m 90.2 KiB [1m[32m[emitted][39m[22m (id hint: vendors)
+  assets by chunk 787 KiB (name: main)
+    asset [1m[32mbundle.js[39m[22m 783 KiB [1m[32m[emitted][39m[22m (name: main)
+    asset [1m[32mmain.580161e293f70cb62aad.hot-update.js[39m[22m 3.82 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m (name: main)
+  asset [1m[32msrc_InfoStatistics_vue.bundle.js[39m[22m 76 KiB [1m[32m[emitted][39m[22m
+  asset [1m[32msrc_InfoStatistics_vue.580161e293f70cb62aad.hot-update.js[39m[22m 41.9 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
+asset [1m[32mindex.html[39m[22m 287 bytes [1m[32m[emitted][39m[22m
+asset [1m[32mmain.580161e293f70cb62aad.hot-update.json[39m[22m 124 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
+Entrypoint [1mmain[39m[22m 787 KiB (655 KiB) = [1m[32mbundle.js[39m[22m 783 KiB [1m[32mmain.580161e293f70cb62aad.hot-update.js[39m[22m 3.82 KiB 1 auxiliary asset
+cached modules 2.05 MiB (javascript) 655 KiB (asset) [1m[32m[cached][39m[22m 77 modules
+runtime modules 29.7 KiB 15 modules
+javascript modules 44.4 KiB
+  code generated modules 32.8 KiB [1m[33m[code generated][39m[22m
+    ./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/App.vue?vue&type=script&setup=true&lang=js[39m[22m 1.54 KiB [1m[33m[code generated][39m[22m
+    ./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[1]!./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=template&id=1a5a5fac&scoped=true[39m[22m 20.8 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    ./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=script&setup=true&lang=js[39m[22m 10.4 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./src/InfoStatistics.vue[39m[22m 941 bytes [1m[33m[built][39m[22m
+  ./node_modules/css-loader/dist/cjs.js!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=style&index=0&id=1a5a5fac&scoped=true&lang=css[39m[22m 10.8 KiB [1m[33m[built][39m[22m
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 499 ms
+assets by status 2.18 MiB [1m[32m[cached][39m[22m 5 assets
+assets by path [1m[32m.[39m[22m 874 KiB
+  assets by path [1m[32m*.js[39m[22m 873 KiB
+    assets by chunk 783 KiB (name: main)
+      asset [1m[32mbundle.js[39m[22m 783 KiB [1m[32m[emitted][39m[22m (name: main)
+      asset [1m[32mmain.af36a9fd68b36147295d.hot-update.js[39m[22m 288 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m (name: main)
+    asset [1m[32msrc_InfoStatistics_vue.bundle.js[39m[22m 76.7 KiB [1m[32m[emitted][39m[22m
+    asset [1m[32msrc_InfoStatistics_vue.af36a9fd68b36147295d.hot-update.js[39m[22m 13.6 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
+  asset [1m[32mindex.html[39m[22m 287 bytes [1m[32m[emitted][39m[22m
+  asset [1m[32mmain.af36a9fd68b36147295d.hot-update.json[39m[22m 53 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
+Entrypoint [1mmain[39m[22m 783 KiB (655 KiB) = [1m[32mbundle.js[39m[22m 783 KiB [1m[32mmain.af36a9fd68b36147295d.hot-update.js[39m[22m 288 bytes 1 auxiliary asset
+cached modules 2.05 MiB (javascript) 655 KiB (asset) [1m[32m[cached][39m[22m 78 modules
+runtime modules 29.7 KiB 15 modules
+javascript modules 43.5 KiB
+  [1m./src/InfoStatistics.vue[39m[22m 941 bytes [1m[33m[built][39m[22m
+  ./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[1]!./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=template&id=1a5a5fac&scoped=true[39m[22m 20.8 KiB [1m[33m[built][39m[22m
+  ./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=script&setup=true&lang=js[39m[22m 10.4 KiB [1m[33m[built][39m[22m
+  ./node_modules/css-loader/dist/cjs.js!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/vue-loader/dist/index.js??ruleSet[1].rules[6].use[0]![1m./src/InfoStatistics.vue?vue&type=style&index=0&id=1a5a5fac&scoped=true&lang=css[39m[22m 11.4 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 321 ms

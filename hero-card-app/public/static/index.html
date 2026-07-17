@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>游戏英雄卡片组</title>
+    <link rel="stylesheet" href="./index.css" />
+    <script>
+      document.write(`<script src="./assets/image-manifest.js?v=${Date.now()}"><\/script>`);
+    </script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero-board">
+        <header class="board-header">
+          <div>
+            <p class="eyebrow">Hero Archive</p>
+            <h1>游戏英雄卡片组</h1>
+          </div>
+          <div class="header-actions">
+            <button class="ghost-action" id="configHeroBtn" type="button">英雄配置</button>
+            <button class="primary-action" id="addHeroBtn" type="button">新增英雄</button>
+          </div>
+        </header>
+
+        <section class="generation-grid" id="generationGrid" aria-label="英雄分代列表"></section>
+      </section>
+    </main>
+
+    <aside class="config-panel" id="configPanel" aria-label="英雄配置面板" hidden>
+      <div class="config-title">
+        <div>
+          <p class="eyebrow">Team Builder</p>
+          <h2>英雄配置</h2>
+        </div>
+        <button class="icon-action" id="closeConfigBtn" type="button" aria-label="关闭配置">×</button>
+      </div>
+
+      <label class="config-field">
+        <span>队伍类型</span>
+        <select id="teamType">
+          <option value="defense">防守队</option>
+          <option value="attack">进攻队</option>
+        </select>
+      </label>
+
+      <label class="config-field">
+        <span>队伍名称</span>
+        <input id="teamName" type="text" placeholder="例如：金盾防守队" />
+      </label>
+
+      <div class="drop-zone" id="dropZone">
+        <p class="drop-title">拖动英雄卡片到这里</p>
+        <p class="drop-tip">同一队伍内职业不能重复，例如不能同时放入两个“盾”或两个“骑”。</p>
+      </div>
+
+      <div class="config-message" id="configMessage" aria-live="polite"></div>
+      <div class="selected-list" id="selectedList"></div>
+
+      <button class="ghost-action full-action" id="clearTeamBtn" type="button">清空队伍</button>
+    </aside>
+
+    <div class="editor-backdrop" id="editorBackdrop" hidden>
+      <aside class="editor-panel" aria-label="英雄卡片编辑区" role="dialog" aria-modal="true">
+        <div class="editor-title">
+          <div>
+            <p class="eyebrow">Card Editor</p>
+            <h2 id="editorHeading">新增英雄</h2>
+          </div>
+          <button class="icon-action" id="closeEditorBtn" type="button" aria-label="关闭">×</button>
+        </div>
+
+        <form id="heroForm" class="hero-form">
+          <input id="heroId" type="hidden" />
+
+            <label>
+              <span>所属代际</span>
+              <select id="heroGeneration" required>
+              </select>
+            </label>
+
+          <label>
+            <span>英雄名称</span>
+            <input id="heroName" type="text" placeholder="例如：杰贝尔" required />
+          </label>
+
+          <label>
+            <span>职业类型</span>
+            <input id="heroRole" type="text" placeholder="例如：骑 / 射 / 盾" />
+          </label>
+
+          <label>
+            <span>英雄描述</span>
+            <textarea id="heroDescription" rows="3" placeholder="例如：前排突击英雄，适合快速打开战线。"></textarea>
+          </label>
+
+          <label>
+            <span>获取方式</span>
+            <input id="heroSource" type="text" placeholder="例如：招募获取" required />
+          </label>
+
+          <label>
+            <span>英雄图片地址</span>
+            <input id="heroImage" type="text" placeholder="https://... 或 ./assets/images/英雄.png" />
+          </label>
+
+          <label>
+            <span>素材库选择</span>
+            <select id="heroAsset">
+              <option value="">选择 assets 文件夹里的素材</option>
+            </select>
+          </label>
+
+          <label>
+            <span>本地素材文件名</span>
+            <input id="heroUpload" type="file" accept="image/*" />
+            <small class="field-note">本地选择只会填入素材路径，不会把照片写进缓存。推荐先把图片放到 assets 文件夹，再从上方素材库选择。</small>
+          </label>
+
+          <div class="form-actions">
+            <button class="primary-action" type="submit">保存卡片</button>
+            <button class="ghost-action" id="resetBtn" type="button">清空</button>
+          </div>
+        </form>
+      </aside>
+    </div>
+
+    <template id="generationTemplate">
+      <article class="generation-column">
+        <div class="generation-heading">
+          <span class="generation-index"></span>
+          <h2></h2>
+        </div>
+        <div class="card-list"></div>
+      </article>
+    </template>
+
+    <template id="cardTemplate">
+      <article class="hero-card">
+        <div class="portrait-wrap">
+          <img class="hero-portrait" alt="" />
+          <div class="portrait-placeholder">
+            <span></span>
+          </div>
+        </div>
+        <div class="card-content">
+          <div>
+            <h3></h3>
+            <p class="role"></p>
+            <p class="description"></p>
+          </div>
+          <p class="source"></p>
+        </div>
+        <div class="card-actions">
+          <button class="edit-btn" type="button">编辑</button>
+          <button class="delete-btn" type="button">删除</button>
+        </div>
+      </article>
+    </template>
+
+    <template id="selectedHeroTemplate">
+      <article class="selected-hero">
+        <span class="selected-avatar"></span>
+        <div>
+          <h3></h3>
+          <p></p>
+        </div>
+        <button class="remove-selected" type="button">移除</button>
+      </article>
+    </template>
+
+    <script>
+      const STORAGE_KEY = "golden-hero-card-group";
+      const CONFIG_KEY = "golden-hero-team-config";
+      const DEFAULT_GENERATION_COUNT = 7;
+      const chineseNumbers = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+
+      const defaultHeroes = [
+        { id: crypto.randomUUID(), generation: "1", name: "杰贝尔", role: "骑", description: "机动突击型英雄，适合快速切入战场。", source: "招募获取", image: "" },
+        { id: crypto.randomUUID(), generation: "1", name: "阿玛迪斯", role: "盾", description: "稳健防御核心，可承担前排压力。", source: "统帅礼包", image: "" },
+        { id: crypto.randomUUID(), generation: "1", name: "赫尔加", role: "盾", description: "高耐久守护英雄，适合阵地推进。", source: "充值", image: "" },
+        { id: crypto.randomUUID(), generation: "2", name: "马林", role: "射", description: "远程输出英雄，擅长持续压制。", source: "英雄殿堂", image: "" },
+        { id: crypto.randomUUID(), generation: "2", name: "佐伊", role: "盾", description: "防护与控制兼备，适合团队保护。", source: "英雄转盘", image: "" },
+        { id: crypto.randomUUID(), generation: "2", name: "希尔德", role: "", description: "稀有英雄，定位可按素材继续补充。", source: "氪金", image: "" },
+        { id: crypto.randomUUID(), generation: "3", name: "xxxx", role: "", description: "待补充英雄描述。", source: "xxxx", image: "" },
+        { id: crypto.randomUUID(), generation: "3", name: "xxxx", role: "", description: "待补充英雄描述。", source: "xxxx", image: "" },
+        { id: crypto.randomUUID(), generation: "3", name: "xxx", role: "", description: "待补充英雄描述。", source: "xxx", image: "" }
+      ];
+
+      let heroes = loadHeroes();
+      let configMode = false;
+      let teamConfig = loadTeamConfig();
+
+      const grid = document.querySelector("#generationGrid");
+      const editorBackdrop = document.querySelector("#editorBackdrop");
+      const generationTemplate = document.querySelector("#generationTemplate");
+      const cardTemplate = document.querySelector("#cardTemplate");
+      const selectedHeroTemplate = document.querySelector("#selectedHeroTemplate");
+      const form = document.querySelector("#heroForm");
+      const editorHeading = document.querySelector("#editorHeading");
+      const configPanel = document.querySelector("#configPanel");
+      const configHeroBtn = document.querySelector("#configHeroBtn");
+      const closeConfigBtn = document.querySelector("#closeConfigBtn");
+      const dropZone = document.querySelector("#dropZone");
+      const selectedList = document.querySelector("#selectedList");
+      const configMessage = document.querySelector("#configMessage");
+      const teamType = document.querySelector("#teamType");
+      const teamName = document.querySelector("#teamName");
+
+      const fields = {
+        id: document.querySelector("#heroId"),
+        generation: document.querySelector("#heroGeneration"),
+        name: document.querySelector("#heroName"),
+        role: document.querySelector("#heroRole"),
+        description: document.querySelector("#heroDescription"),
+        source: document.querySelector("#heroSource"),
+        image: document.querySelector("#heroImage"),
+        asset: document.querySelector("#heroAsset"),
+        upload: document.querySelector("#heroUpload")
+      };
+
+      document.querySelector("#addHeroBtn").addEventListener("click", openAddEditor);
+      document.querySelector("#closeEditorBtn").addEventListener("click", closeEditor);
+      document.querySelector("#resetBtn").addEventListener("click", resetForm);
+      document.querySelector("#clearTeamBtn").addEventListener("click", clearTeam);
+      configHeroBtn.addEventListener("click", toggleConfigMode);
+      closeConfigBtn.addEventListener("click", closeConfigMode);
+      teamType.addEventListener("change", updateTeamMeta);
+      teamName.addEventListener("input", updateTeamMeta);
+      fields.upload.addEventListener("change", handleImageUpload);
+      fields.asset.addEventListener("change", handleAssetSelect);
+      form.addEventListener("submit", saveHero);
+
+      editorBackdrop.addEventListener("click", event => {
+        if (event.target === editorBackdrop) closeEditor();
+      });
+
+      dropZone.addEventListener("dragover", event => {
+        event.preventDefault();
+        dropZone.classList.add("is-over");
+      });
+
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("is-over");
+      });
+
+      dropZone.addEventListener("drop", event => {
+        event.preventDefault();
+        dropZone.classList.remove("is-over");
+        addHeroToTeam(event.dataTransfer.getData("text/plain"));
+      });
+
+      window.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !editorBackdrop.hidden) closeEditor();
+        if (event.key === "Escape" && configMode) closeConfigMode();
+      });
+
+      populateGenerationSelect();
+      populateAssetSelect();
+      render();
+      renderTeamConfig();
+
+        function loadHeroes() {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          const data = saved ? JSON.parse(saved) : defaultHeroes;
+          const compactHeroes = data.map(hero => ({
+            description: "",
+            ...hero,
+            image: normalizeHeroImage(hero)
+          }));
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(compactHeroes));
+        } catch (error) {
+          localStorage.removeItem(STORAGE_KEY);
+          return defaultHeroes;
+        }
+        return compactHeroes;
+      }
+
+      function normalizeHeroImage(hero) {
+        const currentImage = hero.image || "";
+        if (String(currentImage).startsWith("data:")) {
+          return findAssetForHero(hero.name);
+        }
+        return currentImage || findAssetForHero(hero.name);
+      }
+
+      function findAssetForHero(heroName) {
+        const name = String(heroName || "").trim().toLowerCase();
+        const assets = Array.isArray(window.HERO_ASSETS) ? window.HERO_ASSETS : [];
+        const matched = assets.find(fileName => {
+          const baseName = fileName.split("/").pop().replace(/\.[^.]+$/, "").toLowerCase();
+          return baseName === name;
+        });
+        return matched ? `./assets/${matched}` : "";
+      }
+
+      function getGenerationList() {
+        const generationSet = new Set();
+        for (let index = 1; index <= DEFAULT_GENERATION_COUNT; index += 1) {
+          generationSet.add(String(index));
+        }
+
+        heroes.forEach(hero => {
+          if (hero.generation) generationSet.add(String(hero.generation));
+        });
+
+        return [...generationSet].sort((left, right) => Number(left) - Number(right));
+      }
+
+      function getGenerationTitle(generation) {
+        const number = Number(generation);
+        const label = chineseNumbers[number] || number;
+        return `第${label}代英雄`;
+      }
+
+      function populateGenerationSelect() {
+        const currentValue = fields.generation.value || "1";
+        fields.generation.innerHTML = "";
+        getGenerationList().forEach(generation => {
+          const option = document.createElement("option");
+          option.value = generation;
+          option.textContent = getGenerationTitle(generation);
+          fields.generation.appendChild(option);
+        });
+        fields.generation.value = getGenerationList().includes(currentValue) ? currentValue : "1";
+      }
+
+      function loadTeamConfig() {
+        const saved = localStorage.getItem(CONFIG_KEY);
+        if (saved) {
+          return JSON.parse(saved);
+        }
+        return { type: "defense", name: "防守队", heroIds: [] };
+      }
+
+      function persistHeroes() {
+        heroes = heroes.map(hero => ({
+          ...hero,
+          image: String(hero.image || "").startsWith("data:") ? "" : hero.image
+        }));
+
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(heroes));
+        } catch (error) {
+          if (error && error.name === "QuotaExceededError") {
+            heroes = heroes.map(hero => ({ ...hero, image: "" }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(heroes));
+            alert("图片太大，已清理缓存里的图片内容。请把图片放到 assets 文件夹，再用素材路径引用。");
+            render();
+          } else {
+            throw error;
+          }
+        }
+      }
+
+      function persistTeamConfig() {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(teamConfig));
+      }
+
+      function render() {
+        grid.innerHTML = "";
+        getGenerationList().forEach(generation => {
+          const column = generationTemplate.content.cloneNode(true);
+          column.querySelector(".generation-index").textContent = `G${generation}`;
+          column.querySelector("h2").textContent = getGenerationTitle(generation);
+          const cardList = column.querySelector(".card-list");
+
+          heroes
+            .filter(hero => hero.generation === generation)
+            .forEach(hero => cardList.appendChild(createCard(hero)));
+
+          if (!cardList.children.length) {
+            const empty = document.createElement("p");
+            empty.className = "empty-state";
+            empty.textContent = "暂无英雄";
+            cardList.appendChild(empty);
+          }
+
+          grid.appendChild(column);
+        });
+      }
+
+      function createCard(hero) {
+        const card = cardTemplate.content.cloneNode(true);
+        const root = card.querySelector(".hero-card");
+        const image = card.querySelector(".hero-portrait");
+        const placeholder = card.querySelector(".portrait-placeholder");
+        const description = card.querySelector(".description");
+
+        root.dataset.id = hero.id;
+        root.draggable = configMode;
+        root.classList.toggle("is-draggable", configMode);
+        card.querySelector("h3").textContent = hero.name;
+        card.querySelector(".role").textContent = hero.role ? `职业：${hero.role}` : "职业：未设置";
+        description.textContent = hero.description || "英雄描述待补充";
+        card.querySelector(".source").textContent = hero.source;
+        placeholder.querySelector("span").textContent = hero.name.slice(0, 1);
+
+        root.addEventListener("dragstart", event => {
+          if (!configMode) return;
+          event.dataTransfer.setData("text/plain", hero.id);
+          event.dataTransfer.effectAllowed = "copy";
+        });
+
+        if (hero.image) {
+          image.src = hero.image;
+          image.alt = hero.name;
+          image.hidden = false;
+          placeholder.hidden = true;
+        } else {
+          image.hidden = true;
+          placeholder.hidden = false;
+        }
+
+        card.querySelector(".edit-btn").addEventListener("click", () => editHero(hero.id));
+        card.querySelector(".delete-btn").addEventListener("click", () => deleteHero(hero.id));
+        return card;
+      }
+
+      function saveHero(event) {
+        event.preventDefault();
+
+        const data = {
+          id: fields.id.value || crypto.randomUUID(),
+          generation: fields.generation.value,
+          name: fields.name.value.trim(),
+          role: fields.role.value.trim(),
+          description: fields.description.value.trim(),
+          source: fields.source.value.trim(),
+          image: fields.image.value.trim()
+        };
+
+        const index = heroes.findIndex(hero => hero.id === data.id);
+        if (index >= 0) {
+          heroes[index] = data;
+        } else {
+          heroes.push(data);
+        }
+
+        normalizeTeamConfig();
+        persistHeroes();
+        persistTeamConfig();
+        populateGenerationSelect();
+        render();
+        renderTeamConfig();
+        closeEditor();
+      }
+
+      function openAddEditor() {
+        resetForm();
+        openEditor("新增英雄");
+      }
+
+      function editHero(id) {
+        const hero = heroes.find(item => item.id === id);
+        if (!hero) return;
+
+        openEditor("编辑英雄");
+        fields.id.value = hero.id;
+        fields.generation.value = hero.generation;
+        fields.name.value = hero.name;
+        fields.role.value = hero.role;
+        fields.description.value = hero.description || "";
+        fields.source.value = hero.source;
+        fields.image.value = hero.image;
+        fields.asset.value = hero.image && hero.image.startsWith("./assets/") ? hero.image : "";
+        fields.upload.value = "";
+      }
+
+      function deleteHero(id) {
+        heroes = heroes.filter(hero => hero.id !== id);
+        teamConfig.heroIds = teamConfig.heroIds.filter(heroId => heroId !== id);
+        persistHeroes();
+        persistTeamConfig();
+        render();
+        renderTeamConfig();
+        if (fields.id.value === id) closeEditor();
+      }
+
+      function openEditor(title) {
+        editorHeading.textContent = title;
+        editorBackdrop.hidden = false;
+        document.body.classList.add("modal-open");
+        fields.name.focus();
+      }
+
+      function closeEditor() {
+        editorBackdrop.hidden = true;
+        document.body.classList.remove("modal-open");
+        resetForm();
+      }
+
+      function resetForm() {
+        form.reset();
+        fields.id.value = "";
+        fields.asset.value = "";
+        fields.upload.value = "";
+      }
+
+      function toggleConfigMode() {
+        configMode ? closeConfigMode() : openConfigMode();
+      }
+
+      function openConfigMode() {
+        configMode = true;
+        configPanel.hidden = false;
+        configHeroBtn.classList.add("is-active");
+        document.body.classList.add("configuring");
+        render();
+        renderTeamConfig();
+        setConfigMessage("拖动英雄卡片到右侧配置框。", "info");
+      }
+
+      function closeConfigMode() {
+        configMode = false;
+        configPanel.hidden = true;
+        configHeroBtn.classList.remove("is-active");
+        document.body.classList.remove("configuring");
+        render();
+      }
+
+      function renderTeamConfig() {
+        normalizeTeamConfig();
+        teamType.value = teamConfig.type;
+        teamName.value = teamConfig.name;
+        selectedList.innerHTML = "";
+
+        const selectedHeroes = teamConfig.heroIds
+          .map(id => heroes.find(hero => hero.id === id))
+          .filter(Boolean);
+
+        if (!selectedHeroes.length) {
+          const empty = document.createElement("p");
+          empty.className = "empty-state";
+          empty.textContent = "还没有配置英雄";
+          selectedList.appendChild(empty);
+          return;
+        }
+
+        selectedHeroes.forEach(hero => {
+          const item = selectedHeroTemplate.content.cloneNode(true);
+          item.querySelector(".selected-avatar").textContent = hero.name.slice(0, 1);
+          item.querySelector("h3").textContent = hero.name;
+          item.querySelector("p").textContent = `职业：${hero.role || "未设置"}`;
+          item.querySelector(".remove-selected").addEventListener("click", () => removeHeroFromTeam(hero.id));
+          selectedList.appendChild(item);
+        });
+      }
+
+      function addHeroToTeam(heroId) {
+        const hero = heroes.find(item => item.id === heroId);
+        if (!hero) return;
+
+        const role = normalizeRole(hero.role);
+        if (!role) {
+          setConfigMessage(`“${hero.name}”还没有设置职业，先编辑职业后再配置。`, "error");
+          return;
+        }
+
+        if (teamConfig.heroIds.includes(hero.id)) {
+          setConfigMessage(`“${hero.name}”已经在当前队伍里。`, "error");
+          return;
+        }
+
+        const selectedHeroes = teamConfig.heroIds
+          .map(id => heroes.find(item => item.id === id))
+          .filter(Boolean);
+        const duplicate = selectedHeroes.find(item => normalizeRole(item.role) === role);
+        if (duplicate) {
+          setConfigMessage(`职业不能重复：队伍里已经有“${duplicate.name}（${role}）”。`, "error");
+          return;
+        }
+
+        teamConfig.heroIds.push(hero.id);
+        persistTeamConfig();
+        renderTeamConfig();
+        setConfigMessage(`已加入：${hero.name}（${role}）`, "success");
+      }
+
+      function removeHeroFromTeam(heroId) {
+        teamConfig.heroIds = teamConfig.heroIds.filter(id => id !== heroId);
+        persistTeamConfig();
+        renderTeamConfig();
+        setConfigMessage("已移除英雄。", "info");
+      }
+
+      function clearTeam() {
+        teamConfig.heroIds = [];
+        persistTeamConfig();
+        renderTeamConfig();
+        setConfigMessage("队伍已清空。", "info");
+      }
+
+      function updateTeamMeta() {
+        teamConfig.type = teamType.value;
+        teamConfig.name = teamName.value.trim() || (teamConfig.type === "defense" ? "防守队" : "进攻队");
+        persistTeamConfig();
+      }
+
+      function normalizeTeamConfig() {
+        const usedRoles = new Set();
+        teamConfig.heroIds = teamConfig.heroIds.filter(id => {
+          const hero = heroes.find(item => item.id === id);
+          if (!hero) return false;
+          const role = normalizeRole(hero.role);
+          if (!role || usedRoles.has(role)) return false;
+          usedRoles.add(role);
+          return true;
+        });
+        teamConfig.type = teamConfig.type || "defense";
+        teamConfig.name = teamConfig.name || (teamConfig.type === "defense" ? "防守队" : "进攻队");
+      }
+
+      function normalizeRole(role) {
+        return String(role || "").trim();
+      }
+
+      function setConfigMessage(message, type) {
+        configMessage.textContent = message;
+        configMessage.className = `config-message ${type || ""}`;
+      }
+
+      function populateAssetSelect() {
+        const assets = Array.isArray(window.HERO_ASSETS) ? window.HERO_ASSETS : [];
+        fields.asset.querySelectorAll("option:not(:first-child)").forEach(option => option.remove());
+        assets.forEach(fileName => {
+          const option = document.createElement("option");
+          option.value = `./assets/${fileName}`;
+          option.textContent = fileName.split("/").pop();
+          fields.asset.appendChild(option);
+        });
+      }
+
+      function handleAssetSelect() {
+        if (fields.asset.value) {
+          fields.image.value = fields.asset.value;
+        }
+      }
+
+        function handleImageUpload(event) {
+          const file = event.target.files && event.target.files[0];
+          if (!file) return;
+          fields.image.value = `./assets/${file.name}`;
+          fields.asset.value = "";
+          alert(`已填入素材路径：./assets/${file.name}\n浏览器不能直接把图片保存进项目文件夹。请把图片放到 assets 文件夹后，刷新素材清单再从素材库选择。`);
+        }
+
+        function notifyParentResize() {
+          const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+          window.parent.postMessage({ type: "hero-card-resize", height }, "*");
+        }
+
+        if ("ResizeObserver" in window) {
+          new ResizeObserver(notifyParentResize).observe(document.body);
+        }
+
+        window.addEventListener("load", notifyParentResize);
+        window.addEventListener("resize", notifyParentResize);
+      </script>
+    </body>
+  </html>

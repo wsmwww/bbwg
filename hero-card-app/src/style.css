@@ -1,0 +1,21 @@
+html,
+body,
+#hero-card-root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+.hero-card-shell {
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  background: #111318;
+}
+
+.hero-card-frame {
+  display: block;
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  border: 0;
+  background: #111318;
+}

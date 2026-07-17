@@ -1,0 +1,13 @@
+SyntaxError: Unexpected token ﻿ in JSON at position 0
+    at JSON.parse (<anonymous>)
+    at readData (C:\Users\Administrator\Desktop\main-base\info-statistics-api\src\repositories\jsonRegistrationRepository.js:19:23)
+    at async handleRequest (C:\Users\Administrator\Desktop\main-base\info-statistics-api\src\server.js:93:34)
+SyntaxError: Unexpected token ﻿ in JSON at position 0
+    at JSON.parse (<anonymous>)
+    at readData (C:\Users\Administrator\Desktop\main-base\info-statistics-api\src\repositories\jsonRegistrationRepository.js:19:23)
+    at async handleRequest (C:\Users\Administrator\Desktop\main-base\info-statistics-api\src\server.js:93:34)
+SyntaxError: Unexpected token ﻿ in JSON at position 0
+    at JSON.parse (<anonymous>)
+    at readData (C:\Users\Administrator\Desktop\main-base\info-statistics-api\src\repositories\jsonRegistrationRepository.js:19:23)
+    at async createRegistration (C:\Users\Administrator\Desktop\main-base\info-statistics-api\src\repositories\jsonRegistrationRepository.js:38:17)
+    at async handleRequest (C:\Users\Administrator\Desktop\main-base\info-statistics-api\src\server.js:104:34)
