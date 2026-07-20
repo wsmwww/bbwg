@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "1784269038821-e37136d0180ea8",
+    "name": "111",
+    "onlineTime": "222",
+    "voice": "可语音",
+    "diamonds": 333,
+    "willingCost": "一般",
+    "castleLevel": 444,
+    "troops": 22,
+    "preference": "111",
+    "remark": "111",
+    "createdAt": "2026-07-17T06:17:34.823Z",
+    "updatedAt": "2026-07-17T06:17:34.823Z"
+  }
+]

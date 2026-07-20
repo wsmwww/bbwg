@@ -34,16 +34,35 @@
       <em>{{ loading ? '正在读取两个区服...' : statusText }}</em>
     </section>
 
+    <section class="manual-upload">
+      <button class="manual-upload__toggle" type="button" :aria-expanded="showManualUpload" @click="showManualUpload = !showManualUpload">
+        {{ showManualUpload ? '收起手动数据上传' : '手动数据上传' }}
+      </button>
+      <div v-if="showManualUpload" class="manual-upload__panel">
+        <label>
+          <span>A 区 JSON</span>
+          <input type="file" accept=".json,application/json" @change="readManualFile('a', $event)" />
+          <small>{{ manualFileNameA || '尚未选择文件' }}</small>
+        </label>
+        <label>
+          <span>B 区 JSON</span>
+          <input type="file" accept=".json,application/json" @change="readManualFile('b', $event)" />
+          <small>{{ manualFileNameB || '尚未选择文件' }}</small>
+        </label>
+        <button type="button" :disabled="!manualPayloadA || !manualPayloadB" @click="applyManualComparison">使用上传数据对比</button>
+      </div>
+    </section>
+
     <p v-if="errorMessage" class="comparison-page-error">{{ errorMessage }}</p>
 
     <template v-if="payloadA && payloadB">
       <nav class="ranking-tabs" aria-label="比对榜单">
         <button
-          v-for="item in rankingTypes"
+          v-for="item in availableRankingTypes"
           :key="item.type"
           type="button"
           :class="{ active: activeType === item.type }"
-          @click="activeType = item.type"
+          @click="selectRankingType(item.type)"
         >
           {{ item.label }}
         </button>
@@ -74,7 +93,7 @@
           <div><b>A</b><strong>{{ serverA }} 区完整排名</strong><span>{{ rowsA.length }} 人</span></div>
           <div><b>B</b><strong>{{ serverB }} 区完整排名</strong><span>{{ rowsB.length }} 人</span></div>
         </header>
-        <div class="comparison-table__rows">
+        <div ref="tableRowsRef" class="comparison-table__rows">
           <div v-for="pair in pairedRows" :key="pair.rank" class="comparison-rank-pair">
             <article :class="{ empty: !pair.a }">
               <b>{{ pair.rank }}</b>
@@ -105,7 +124,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { fetchServerIds, fetchServerRanking } from './alliance-member-service';
 
 defineEmits(['back-to-series']);
@@ -122,21 +141,30 @@ const rankingTypes = [
 ];
 
 const serverIds = ref([]);
-const serverA = ref('');
-const serverB = ref('');
-const rangeA = ref(1);
-const rangeB = ref(1);
+const serverA = ref('406');
+const serverB = ref('398');
+const rangeA = ref(400);
+const rangeB = ref(300);
 const payloadA = ref(null);
 const payloadB = ref(null);
-const activeType = ref(3);
+const activeType = ref(8);
 const loading = ref(false);
 const errorMessage = ref('');
+const showManualUpload = ref(false);
+const manualPayloadA = ref(null);
+const manualPayloadB = ref(null);
+const manualFileNameA = ref('');
+const manualFileNameB = ref('');
+const tableRowsRef = ref(null);
 
 const rowsA = computed(() => payloadA.value?.rankings?.[String(activeType.value)]?.rows || []);
 const rowsB = computed(() => payloadB.value?.rankings?.[String(activeType.value)]?.rows || []);
 const leaderA = computed(() => rowsA.value[0] || { name: '暂无数据', score: 0 });
 const leaderB = computed(() => rowsB.value[0] || { name: '暂无数据', score: 0 });
 const activeRankingLabel = computed(() => rankingTypes.find(item => item.type === activeType.value)?.label || '排行榜');
+const availableRankingTypes = computed(() => rankingTypes.filter(item => (
+  payloadA.value?.rankings?.[String(item.type)] && payloadB.value?.rankings?.[String(item.type)]
+)));
 const leaderWinner = computed(() => {
   const a = Number(leaderA.value.score || 0);
   const b = Number(leaderB.value.score || 0);
@@ -166,6 +194,7 @@ const filteredServersB = computed(() => filterServersByRange(rangeB.value));
 
 function getAllianceText(row) {
   if (!row?.alliance_name) return '暂无联盟';
+  if (row.alliance_abbr && row.alliance_abbr === row.alliance_name) return `[${row.alliance_abbr}]`;
   return `${row.alliance_abbr ? `[${row.alliance_abbr}] ` : ''}${row.alliance_name}`;
 }
 
@@ -173,6 +202,17 @@ function formatScore(value) {
   const score = Number(value || 0);
   if (activeType.value === 5) return `Lv.${score}`;
   return score.toLocaleString('zh-CN');
+}
+
+function resetRankingScroll() {
+  nextTick(() => {
+    if (tableRowsRef.value) tableRowsRef.value.scrollTop = 0;
+  });
+}
+
+function selectRankingType(type) {
+  activeType.value = type;
+  resetRankingScroll();
 }
 
 function filterServersByRange(start) {
@@ -197,8 +237,6 @@ function selectRange(side, start) {
 
 async function compareIfReady() {
   errorMessage.value = '';
-  payloadA.value = null;
-  payloadB.value = null;
   if (!serverA.value || !serverB.value) return;
   if (serverA.value === serverB.value) {
     errorMessage.value = '请选择两个不同的区服';
@@ -210,20 +248,61 @@ async function compareIfReady() {
       fetchServerRanking(serverA.value),
       fetchServerRanking(serverB.value)
     ]);
+    activeType.value = availableRankingTypes.value[0]?.type || 8;
+    resetRankingScroll();
   } catch (error) {
+    payloadA.value = null;
+    payloadB.value = null;
     errorMessage.value = error?.message || '区服排行榜读取失败';
   } finally {
     loading.value = false;
   }
 }
 
+async function readManualFile(side, event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  errorMessage.value = '';
+  try {
+    const payload = JSON.parse(await file.text());
+    if (!payload?.rankings || typeof payload.rankings !== 'object') throw new Error('JSON 中缺少 rankings 榜单数据');
+    if (side === 'a') {
+      manualPayloadA.value = payload;
+      manualFileNameA.value = file.name;
+    } else {
+      manualPayloadB.value = payload;
+      manualFileNameB.value = file.name;
+    }
+  } catch (error) {
+    errorMessage.value = `${side.toUpperCase()} 区文件读取失败：${error?.message || 'JSON 格式错误'}`;
+  }
+}
+
+function applyManualComparison() {
+  if (!manualPayloadA.value || !manualPayloadB.value) return;
+  payloadA.value = manualPayloadA.value;
+  payloadB.value = manualPayloadB.value;
+  serverA.value = String(manualPayloadA.value.kid || 'A');
+  serverB.value = String(manualPayloadB.value.kid || 'B');
+  activeType.value = availableRankingTypes.value[0]?.type || 3;
+  resetRankingScroll();
+  showManualUpload.value = false;
+  errorMessage.value = '';
+}
+
 onMounted(async () => {
   loading.value = true;
   try {
     serverIds.value = await fetchServerIds();
+    if (!serverIds.value.includes(406) || !serverIds.value.includes(398)) {
+      serverA.value = String(serverIds.value[0] || '');
+      serverB.value = String(serverIds.value[1] || '');
+      rangeA.value = Number(serverA.value) < 100 ? 1 : Math.floor(Number(serverA.value) / 100) * 100;
+      rangeB.value = Number(serverB.value) < 100 ? 1 : Math.floor(Number(serverB.value) / 100) * 100;
+    }
+    await compareIfReady();
   } catch (error) {
     errorMessage.value = error?.message || '区服目录读取失败';
-  } finally {
     loading.value = false;
   }
 });
@@ -244,8 +323,17 @@ onMounted(async () => {
 .comparison-control-card select { box-sizing: border-box; width: 100%; height: 42px; border: 1px solid rgba(67,80,58,.24); border-radius: 8px; padding: 0 11px; color: #263321; background: #fffdf8; }
 .comparison-control-card > b { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 50%; color: #fff8df; background: #973a32; font-size: 11px; }
 .comparison-control-card > em { align-self: center; color: #657450; font-size: 12px; font-style: normal; font-weight: 900; white-space: nowrap; }
+.manual-upload { display: grid; justify-items: end; margin-top: 12px; }
+.manual-upload__toggle { border: 1px solid rgba(150,112,30,.25); border-radius: 9px; padding: 9px 14px; color: #5f4919; background: #fff4d3; font-weight: 900; cursor: pointer; }
+.manual-upload__panel { box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; width: 100%; margin-top: 10px; border: 1px solid rgba(150,112,30,.18); border-radius: 12px; padding: 14px; background: rgba(255,253,248,.9); }
+.manual-upload__panel label { display: grid; gap: 6px; min-width: 0; }
+.manual-upload__panel label > span { color: #5a654a; font-size: 12px; font-weight: 900; }
+.manual-upload__panel input { width: 100%; }
+.manual-upload__panel small { overflow: hidden; color: rgba(38,51,33,.58); text-overflow: ellipsis; white-space: nowrap; }
+.manual-upload__panel > button { height: 38px; border: 0; border-radius: 9px; padding: 0 15px; color: #2b230d; background: linear-gradient(135deg, #ffe487, #e5a51e); font-weight: 900; cursor: pointer; }
+.manual-upload__panel > button:disabled { cursor: not-allowed; opacity: .45; }
 .comparison-page-error { border-radius: 8px; padding: 14px; color: #9f1d1d; background: #ffe6df; text-align: center; }
-.ranking-tabs { display: flex; gap: 8px; margin-top: 18px; overflow-x: auto; padding-bottom: 4px; }
+.ranking-tabs { display: flex; min-height: 36px; justify-content: center; align-items: center; gap: 8px; margin-top: 18px; overflow: visible; padding: 2px 0; }
 .ranking-tabs button { flex: 0 0 auto; border: 1px solid rgba(67,80,58,.16); border-radius: 999px; padding: 8px 13px; color: #566249; background: rgba(255,253,248,.82); font-size: 12px; font-weight: 900; cursor: pointer; }
 .ranking-tabs button.active { border-color: #697b4d; color: #fff; background: #697b4d; }
 .leader-summary { display: grid; grid-template-columns: 1fr minmax(180px,.55fr) 1fr; gap: 14px; margin-top: 14px; }
@@ -260,7 +348,9 @@ onMounted(async () => {
 .comparison-table { margin-top: 14px; overflow: hidden; border: 1px solid rgba(67,80,58,.16); border-radius: 12px; background: rgba(255,253,248,.9); box-shadow: 0 18px 44px rgba(35,45,28,.12); }
 .comparison-table > header { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px; background: #ece5d6; }
 .comparison-table > header div { display: grid; grid-template-columns: 30px 1fr auto; gap: 9px; align-items: center; }
-.comparison-table > header div:last-child { text-align: right; }
+.comparison-table > header div:last-child { grid-template-columns: auto minmax(0,1fr) 30px; text-align: right; }
+.comparison-table > header div:last-child > span { order: 1; }
+.comparison-table > header div:last-child > strong { order: 2; }
 .comparison-table > header b { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 7px; color: white; background: #3477a1; }
 .comparison-table > header div:last-child b { order: 3; background: #b65c3c; }
 .comparison-table > header span { color: rgba(38,51,33,.58); font-size: 11px; }
@@ -285,14 +375,19 @@ onMounted(async () => {
   .comparison-page-head button { flex: 0 0 auto; padding: 7px 10px; font-size: 11px; }
   .comparison-page-head h1 { font-size: 25px; }
   .comparison-page-head p { font-size: 11px; }
-  .comparison-control-card, .leader-summary { grid-template-columns: 1fr; }
-  .comparison-control-card { gap: 11px; margin-top: 14px; padding: 12px; }
+  .comparison-control-card { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; padding: 10px; }
+  .comparison-control-card > label { min-width: 0; }
+  .comparison-control-card select { min-width: 0; padding: 0 7px; }
+  .comparison-range-tabs { gap: 3px; }
+  .comparison-range-tabs button { padding: 4px 6px; font-size: 9px; }
   .comparison-control-card > b { display: none; }
-  .comparison-control-card > em { white-space: normal; }
+  .comparison-control-card > em { grid-column: 1 / -1; text-align: center; white-space: normal; }
+  .manual-upload__panel { grid-template-columns: 1fr; }
+  .manual-upload__panel > button { width: 100%; }
   .ranking-tabs { margin-top: 12px; }
+  .ranking-tabs { justify-content: flex-start; overflow-x: auto; overflow-y: hidden; }
   .ranking-tabs button { padding: 7px 10px; font-size: 11px; }
-  .leader-summary { gap: 8px; }
-  .leader-summary article, .leader-summary > div { padding: 10px; }
+  .leader-summary { display: none; }
   .comparison-table { margin-top: 10px; border-radius: 9px; }
   .comparison-table > header { gap: 6px; padding: 9px 7px; }
   .comparison-table > header div {

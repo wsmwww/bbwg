@@ -65,11 +65,11 @@ module.exports = (env, argv) => {
       'Access-Control-Allow-Origin': '*'
     },
     proxy: {
-      '/benben-ranking-api': {
-        target: 'https://benbenkshen.cn',
+      '/ranking-api': {
+        target: 'https://t2s.awzh.cn',
         changeOrigin: true,
         secure: true,
-        pathRewrite: { '^/benben-ranking-api': '/data' }
+        pathRewrite: { '^/ranking-api': '/api/ranking' }
       }
     }
   },

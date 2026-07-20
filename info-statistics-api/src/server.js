@@ -1,6 +1,7 @@
 const http = require('http');
 const { randomUUID } = require('crypto');
 const { URL } = require('url');
+const { config, hasSupabaseConfig } = require('./config/env');
 const {
   listRegistrations,
   replaceRegistrations,
@@ -8,9 +9,9 @@ const {
   updateRegistration,
   deleteRegistration,
   clearRegistrations
-} = require('./repositories/jsonRegistrationRepository');
+} = require('./repositories');
 
-const PORT = Number(process.env.PORT || 8090);
+const PORT = config.port;
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
@@ -78,7 +79,7 @@ function normalizeRegistration(input = {}) {
 
 async function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const pathname = url.pathname.replace(/\/+$/, '') || '/';
+  const pathname = (url.pathname.replace(/^\/info-api/, '').replace(/\/+$/, '') || '/');
 
   if (req.method === 'OPTIONS') {
     sendNoContent(res);
@@ -86,7 +87,11 @@ async function handleRequest(req, res) {
   }
 
   if (req.method === 'GET' && pathname === '/api/health') {
-    sendJson(res, 200, { ok: true, service: 'info-statistics-api' });
+    sendJson(res, 200, {
+      ok: true,
+      service: 'info-statistics-api',
+      storage: hasSupabaseConfig() ? 'supabase' : 'json'
+    });
     return;
   }
 
@@ -169,6 +174,6 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`info-statistics-api listening on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`info-statistics-api listening on http://0.0.0.0:${PORT}`);
 });

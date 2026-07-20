@@ -1,6 +1,5 @@
 [[redirects]]
-  from = "/benben-ranking-api/*"
-  to = "https://benbenkshen.cn/data/:splat"
+  from = "/ranking-api/*"
+  to = "https://t2s.awzh.cn/api/ranking/:splat"
   status = 200
   force = true
-

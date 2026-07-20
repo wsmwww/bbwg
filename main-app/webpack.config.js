@@ -12,7 +12,7 @@ class EmitNetlifyRedirectsPlugin {
         () => {
           compilation.emitAsset(
             '_redirects',
-            new compiler.webpack.sources.RawSource('/benben-ranking-api/*  https://benbenkshen.cn/data/:splat  200!\n')
+            new compiler.webpack.sources.RawSource('/ranking-api/*  https://t2s.awzh.cn/api/ranking/:splat  200!\n')
           );
         }
       );
@@ -38,6 +38,19 @@ module.exports = {
     historyApiFallback: true,
     headers: {
       'Access-Control-Allow-Origin': '*'
+    },
+    proxy: {
+      '/ranking-api': {
+        target: 'https://t2s.awzh.cn',
+        changeOrigin: true,
+        secure: true,
+        pathRewrite: { '^/ranking-api': '/api/ranking' }
+      },
+      '/info-api': {
+        target: 'http://localhost:8090',
+        changeOrigin: true,
+        pathRewrite: { '^/info-api': '' }
+      }
     }
   },
   plugins: [

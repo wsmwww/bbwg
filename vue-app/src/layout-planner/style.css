@@ -1338,6 +1338,27 @@ body.resizing {
     overflow: hidden;
 }
 
+/* 三盟争霸只保留地图操作、城市列表、三盟建筑和线路编辑。 */
+#topControls.three-alliance-mode .planner-building-shortcut,
+#topControls.three-alliance-mode .planner-alliance-shortcut,
+#topControls.three-alliance-mode .planner-mode-shortcut,
+#rightSidebar.three-alliance-mode .planner-map-mode,
+#rightSidebar.three-alliance-mode .planner-alliance-mode,
+#rightSidebar.three-alliance-mode .planner-building-section,
+#rightSidebar.three-alliance-mode #citySettingsButtons,
+#rightSidebar.three-alliance-mode #anchorInputContainer,
+#rightSidebar.three-alliance-mode #teamManagementSection,
+#mobileNav.three-alliance-mode .planner-mobile-building-nav,
+#mobilePanels.three-alliance-mode #mobileBuildings,
+#mobilePanels.three-alliance-mode .planner-map-mode,
+#mobilePanels.three-alliance-mode .planner-alliance-mode,
+#mobilePanels.three-alliance-mode #mobileActiveAllianceTrapHint,
+#mobilePanels.three-alliance-mode #mobileMarchtimeHint,
+#mobilePanels.three-alliance-mode #mobileCitySettingsButtons,
+#mobilePanels.three-alliance-mode #mobileTeamActions {
+    display: none !important;
+}
+
 .sword-task-head {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

@@ -125,6 +125,7 @@ let activeSwordLegion = localStorage.getItem(SWORD_ACTIVE_LEGION_STORAGE_KEY) ==
 let battlefieldConnectionLines = [];
 let selectedBattlefieldLineColor = 'blue';
 let markedHaloRafId = null;
+let threeAllianceBattlefieldMode = false;
 
 const BATTLEFIELD_LINE_COLORS = Object.freeze({
     blue: Object.freeze({
@@ -239,6 +240,7 @@ const SWORD_BATTLEFIELD_TEMPLATE = Object.freeze([
 ]);
 
 const THREE_ALLIANCE_BATTLEFIELD_KEY = 'three-alliance';
+const THREE_ALLIANCE_BATTLEFIELD_INITIAL_CODE = 'lp2:tVpfbBRFGPdJEv88EROi4YHVBBNP0tvbvd1rgEQQJDFBA6RITIm31217cHcte1eIYAM8oBioEnnQ8M-IFBO1RBAK1RQMIcFoACPqi9hEba8QAcOD8UEfnLmZm-lNd2e_szNN-HPX38zvm29-3--bnbv7rh1Nt_9698qC2cNf7j936-KhOwsKh4fv3bjv9urO7RsvDl7f8NferW-OnJrb_eecy6uuDy07O355xwbz86H1W0u3144-_-3DB574bei1eSMf_PLIgq_fOJ-7tunucHVxObFw9tjfLyxe_t3SruKFHy4_1Lvx3Jz29pXrZ21_7OCyse8n8n2bFv1xY8W1V-d_dX1s14R55-3NDyyc1b6_dHH-s_9cHby15N48f_j0zy_9u_d825Lfn1p3-NLVH7tP2M6jrQOJ46f2tM_dPXzpivfKqYF1TybG71_34HuLvmkZO5z_acc2I2u0vpxuaUmgP-0Jo2C01t4yOo2E0Yv-LbS1ZTfhnzb2s7b2mv50PYOAOaM14_QnDB_Ntc0ooWETxz6aOPTZ5PGdE68fJADjcdtPdzgueuWhV5XuwPefzhYK-Wwp56M388Wu-tvLs7lKvqe0JFvGv6jkO3AcfmeFvtGVQq_9bFDpRi-2GK1mwuiu_Z03Wlv6EySAWx--VT1wWmEAQb6ruyGCcqUnKE6PIFmPoLrjneqZjxVG4PVUKj3FqSFsyW7G_xciMFkEoyeqJ_dNDh6pnrhQj6DD9Gw7BYhgTb7DX-MXews8gJxfqvhBnZy9QvRWjR79jehTdfrxc0M3Rz-tHjk6-cVond7xMlkvCaEPsqVypx-s6PM4f2XlljD2qYu3dLKzxEex2xrZ18aRpzWSL4sjR-WvjXx17K67Otljdz3DTGfnuzcvjNR5c66VTnUAeFf15Uvc6Eo4VJnHJbnJ1fgmzx9j1e3m0qkckPK5oKevdwqvGcfLre3M2fGRPdX3T9Z5rU63I2sBeFf72RfzhUIWZ7HOi91I5E1O5eWGtntgYuCTiV1nbu4bZEtu8VwLsuSl2eLU1eJopavV52OFkh1HzmxMiaSKsZJixqV0a4thkmrYWuZZSqVcDJMUW29xYy0ITM9cS02aYzXFfEptmsPk1JBm5lBqedMxvKbgVDPNrxOTX5M5lPqarY2UkjObUqplL86WTWZUSjfXi7Nlk3mUQlv24krIZE6lRFJenBObgkPNjC_gzT3i8cEULEmNigLe3KN4tVhTwJv7FN4GFXFrUqaigDf3iNWmmDEpN4qAN_cocuZSSiTFm3sUHz8_qdxa3twjtjbFjEmplHlzD1svb-4ppWeogDf3qDRrOUMFvLlHpZk5lFpe1tyjeJUengLe3KPyq-8hL-DNPYpceMZTpGXe3CN4LWZUSjeXN_eIzbX0naQC3uOjFi2cpGaoLN7jo_j0Pep5vOGHX9ZZ-i6sPN70I7iFs5QaUXu8IUXQanno83g_iqBlfqXupOHxZhRBquVY5ZVDUtxQvloe-LxySIqn0tpa3MorhyS5gVbLxZRXZj4VQavUprwgpmxs4Tg1U7qYcrGVHp-8IKZQbKXPdV4QsncNdPouy71K3Ebquyv3KnG7yvxoZmkWp1XsN0KlpRXdI4kfmCh6EBOnVeQL4rSK73nEHPPrHC3TK6pvMSmKrmfEaRU924jTKj4NiDnWW4WO4s-dxE8Q9VSjo6caHUXdWJxWbxU6iu8oxOn1VKOjpxodvdXo6K1GV281unqq0dVTja6eanSFM7DKHPOLSldPa3QV3wuK-tNTlK7eonT1FmVGb1FmdNzKiRyKPy0QM6T4QwExeh3XaSKHjm95iRzpfvRtTDQh-j5lJ_4gHT3h4c-3Q6fF4SCQla6BrIwMZJOZbPRdPQkI8WCQLQWhSDEIsUaDKEbKlnLJ4qRkKBQ8EYo-NgHysC3CJs8SBUmXRpNkyUMi6cbzSRJA4sZ5iAdJ04R_i-mkICsVn2-KwXscC0o5UgXQuOUgqkq5lqi-5UVAdiWmUigdil9ChxQSm3ATLQvTyWuOYKQZSNIiAIGki8OrigUlSdzyDFAQZpVIjqQJYyUxkcBBIGlIlE2OIfkOX3_CQOcuI_A7GJqKONw0psFNWmFSpSaJvvDUkDktZI844HAnmQZPNrW-JN0f4PqSpMigcJvODkOnad2FV8t0OKllPAq0NdS0gcHYtHTD1R0Fj7DW6bETWeHsg-BEVjj7IDiRAB4FghOB4ZhAcKIBTNIMPLzJT4fTbYIuleQdDKcmAg2GzA6GE7lDNUPhSWDeqd0C0UQC4Y463eVIKUHXWYcDPYPICzp5HQ5MCvEMaFU7JHI8qgk4NOdULngUaHZS1bJYunoKPDEEjkeB8A71GCjeJInHw0D4_wXHDTK6MzoEBM2IQ0UuU1YDnoYsM4sGPN1PMJ64Cw4LhicGgGlAeJeIHdPA8PS0C80PxWMaGJ4qUtbFQvDw-YmC8TAYnuwvHE_0g4c1FQ90f8n2guFEPU3CoeUnOxlHzg00MjI3PqDDnICmXTZ7CF56pq5LF7yV5FQCViJxAjwKhqd7Ca3sJA0fXNn06ABNoUlTDq3UDHEacDwZEj8e1gwehwXD0wMwdL0Ujx-dQAKmrRJ4LKBw6ANchtgSHtUEHHpgrsOBh84MUQIeBYKTOoFvFMFjFtD0VPdgF6Pnt3gdt_f_Bw';
 const THREE_ALLIANCE_BATTLEFIELD_TEMPLATE = Object.freeze({
     nodes: Object.freeze([
         Object.freeze({ id: 'leftBase', name: '大地禁军', dx: -33, dy: -6, width: 2, height: 2, type: 'hq', color: '#5e6d78', imageKey: 'threeFactionBase' }),
@@ -1017,6 +1019,7 @@ function markSwordBattlefieldEntities() {
 
 function setSwordBattlefieldMode(active) {
     const enabled = Boolean(active);
+    if (enabled) setThreeAllianceBattlefieldMode(false);
     document.getElementById('rightSidebar')?.classList.toggle('sword-mode', enabled);
     document.body.classList.toggle('sword-mode', enabled);
     if (enabled) {
@@ -1084,8 +1087,31 @@ function placeSwordBattlefield() {
     }
 }
 
-function placeThreeAllianceBattlefield() {
+function setThreeAllianceBattlefieldMode(active) {
+    const enabled = Boolean(active);
+    threeAllianceBattlefieldMode = enabled;
+    ['topControls', 'rightSidebar', 'mobileNav', 'mobilePanels'].forEach(id => {
+        document.getElementById(id)?.classList.toggle('three-alliance-mode', enabled);
+    });
+
+    document.querySelectorAll('.team-sort-option').forEach(option => {
+        option.hidden = enabled;
+        option.disabled = enabled;
+    });
+
+    if (enabled) {
+        document.querySelectorAll('#citySort, #mobileCitySort').forEach(select => {
+            if (select.value === 'team') select.value = 'name';
+        });
+        if (!['select', 'move', 'delete'].includes(selectedType)) {
+            setSelectedTool('select');
+        }
+    }
+}
+
+function placeThreeAllianceBattlefieldFallback() {
     setSwordBattlefieldMode(false);
+    setThreeAllianceBattlefieldMode(true);
     removeSwordBattlefieldEntities();
     removeBattlefieldEntities(THREE_ALLIANCE_BATTLEFIELD_KEY);
     removeEditableMapEntities();
@@ -1126,6 +1152,32 @@ function placeThreeAllianceBattlefield() {
     markUnsavedChanges();
     pushHistory();
     showShortcutToast('已生成：三盟争霸');
+}
+
+function placeThreeAllianceBattlefield() {
+    const mapDataInput = document.getElementById('mapData');
+    const mobileMapDataInput = document.getElementById('mobileMapData');
+
+    try {
+        setSwordBattlefieldMode(false);
+        if (mapDataInput) mapDataInput.value = THREE_ALLIANCE_BATTLEFIELD_INITIAL_CODE;
+        if (mobileMapDataInput) mobileMapDataInput.value = THREE_ALLIANCE_BATTLEFIELD_INITIAL_CODE;
+        loadMap();
+        setSwordBattlefieldMode(false);
+        setThreeAllianceBattlefieldMode(true);
+        if (mapDataInput) mapDataInput.value = THREE_ALLIANCE_BATTLEFIELD_INITIAL_CODE;
+        if (mobileMapDataInput) mobileMapDataInput.value = THREE_ALLIANCE_BATTLEFIELD_INITIAL_CODE;
+        setSelection([], { pulse: false });
+        redraw();
+        updateCounters();
+        updateCityList();
+        markChangesSaved();
+        pushHistory();
+        showShortcutToast('已加载：三盟争霸初始化模板');
+    } catch (error) {
+        console.warn('Failed to load three-alliance initial code, using fallback template.', error);
+        placeThreeAllianceBattlefieldFallback();
+    }
 }
 
 function getViewportCenterGridPosition() {
@@ -3480,35 +3532,22 @@ function getAllianceRankingApiBase() {
         return String(window.__BENBEN_RANKING_API_BASE__).replace(/\/$/, '');
     }
     if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-        return '//localhost:8081/benben-ranking-api';
+        return '//localhost:8081/ranking-api';
     }
-    return '/benben-ranking-api';
+    return '/ranking-api';
 }
 
-function collectRemoteAllianceMembers(payload, allianceId) {
-    const targetId = Number(allianceId);
-    const members = new Map();
-    Object.values(payload?.rankings || {}).forEach(ranking => {
-        (ranking?.rows || []).forEach(row => {
-            if (row?.entity_type !== 'player' || Number(row.alliance_id) !== targetId || !row.uid) return;
-            const uid = String(row.uid);
-            const previous = members.get(uid) || {};
-            const isPowerRanking = Number(ranking.type) === 3;
-            members.set(uid, {
-                uid,
-                name: String(row.name || previous.name || `玩家 ${uid}`).trim(),
-                power: Math.max(Number(previous.power || 0), Number(row.power || 0), isPowerRanking ? Number(row.score || 0) : 0),
-                alliance: row.alliance_abbr
-                    ? `[${row.alliance_abbr}] ${row.alliance_name || ''}`.trim()
-                    : String(row.alliance_name || previous.alliance || '').trim(),
-                role: Number(row.town_center_level || previous.townCenterLevel || 0)
-                    ? `城镇中心 Lv.${Number(row.town_center_level || previous.townCenterLevel)}`
-                    : '',
-                townCenterLevel: Math.max(Number(previous.townCenterLevel || 0), Number(row.town_center_level || 0))
-            });
-        });
-    });
-    return [...members.values()]
+function collectRemoteAllianceMembers(players, allianceId) {
+    const target = String(allianceId || '').trim().toLocaleLowerCase();
+    return (players || [])
+        .filter(row => String(row.alliance || '').trim().toLocaleLowerCase() === target)
+        .map(row => ({
+            uid: String(row.id),
+            name: String(row.nickname || `玩家 ${row.id}`).trim(),
+            power: Number(row.hero_power || 0),
+            alliance: String(row.alliance || '').trim(),
+            role: row.secret_level ? `秘境 ${Number(row.secret_level)}` : ''
+        }))
         .sort((a, b) => (b.power - a.power) || a.name.localeCompare(b.name, 'zh-CN'))
         .map((member, index) => ({ ...member, rank: index + 1 }));
 }
@@ -3516,10 +3555,30 @@ function collectRemoteAllianceMembers(payload, allianceId) {
 async function fetchConfiguredAllianceMembers() {
     const settings = loadAllianceDataSettings();
     if (!settings) return null;
-    const response = await fetch(`${getAllianceRankingApiBase()}/${Number(settings.serverId)}.json?t=${Date.now()}`, { cache: 'no-store' });
+    const params = new URLSearchParams({
+        mode: 'server',
+        sort: 'hero_power',
+        order: 'desc',
+        page: '1',
+        size: '50',
+        batch_id: '10',
+        servers: String(settings.serverId),
+        keyword: String(settings.allianceId)
+    });
+    const response = await fetch(`${getAllianceRankingApiBase()}/players?${params}`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
-    const members = collectRemoteAllianceMembers(payload, settings.allianceId);
+    const result = await response.json();
+    if (Number(result?.code) !== 0) throw new Error(result?.message || '排行榜接口返回异常');
+    const players = [...(result?.data?.list || [])];
+    const pageCount = Math.ceil(Number(result?.data?.total || players.length) / Number(result?.data?.size || 50));
+    for (let page = 2; page <= pageCount; page += 1) {
+        params.set('page', String(page));
+        const nextResponse = await fetch(`${getAllianceRankingApiBase()}/players?${params}`, { cache: 'no-store' });
+        if (!nextResponse.ok) throw new Error(`HTTP ${nextResponse.status}`);
+        const nextResult = await nextResponse.json();
+        players.push(...(nextResult?.data?.list || []));
+    }
+    const members = collectRemoteAllianceMembers(players, settings.allianceId);
     if (!members.length) throw new Error('当前排行榜中没有找到已配置联盟的成员');
     return {
         members,
@@ -5664,6 +5723,9 @@ function handleToolbarClick(e) {
 function setSelectedTool(toolType, { showToast = false } = {}) {
     if (!toolType) return false;
 
+    const buildingTools = ['flag', 'city', 'building', 'hq', 'node', 'obstacle', 'enemyzone', 'dog', 'capybara'];
+    if (threeAllianceBattlefieldMode && buildingTools.includes(toolType)) return false;
+
     const knownToolButton = document.querySelector(
         `#toolbar-controls button[data-type="${toolType}"], #toolbar-buildings button[data-type="${toolType}"], #mobile-toolbar-buildings button[data-type="${toolType}"]`
     );
@@ -7028,6 +7090,7 @@ function handleKeyDown(event) {
     if (!event.altKey && !event.ctrlKey && !event.metaKey) {
         if (normalizedKey === 'm') {
             event.preventDefault();
+            if (threeAllianceBattlefieldMode) return;
             const nextMode = mapMode === 'castle' ? 'base' : 'castle';
             setMapMode(nextMode);
             showShortcutToast(`模式：${nextMode === 'castle' ? '王城' : '基地'} (M)`);
@@ -7036,6 +7099,7 @@ function handleKeyDown(event) {
 
         if (normalizedKey === 'a') {
             event.preventDefault();
+            if (threeAllianceBattlefieldMode) return;
             const currentAllianceIndex = ALLIANCES.findIndex(a => a.id === normalizeAllianceId(activeAllianceId));
             const nextAlliance = ALLIANCES[(currentAllianceIndex + 1) % ALLIANCES.length]?.id || DEFAULT_ALLIANCE_ID;
             setActiveAlliance(nextAlliance);
@@ -7061,6 +7125,7 @@ function handleKeyDown(event) {
         const shortcutTool = TOOL_SHORTCUT_KEY_MAP[normalizedKey];
         if (shortcutTool) {
             event.preventDefault();
+            if (threeAllianceBattlefieldMode) return;
             if (shortcutTool === 'enemyzone' && mapMode !== 'castle') {
                 showShortcutToast('敌方区域只能在王城模式使用');
                 return;
@@ -8662,7 +8727,11 @@ function loadMap() {
         if (!applyBattlefieldConnectionsFromMapCode(entities, !Array.isArray(loaded) ? loaded.battlefieldConnections : null)) {
             rebuildBattlefieldConnectionLinesFromEntities();
         }
-        setSwordBattlefieldMode(entities.some(entity => entity?.battlefield === SWORD_BATTLEFIELD_KEY));
+        const containsSwordBattlefield = entities.some(entity => entity?.battlefield === SWORD_BATTLEFIELD_KEY);
+        setSwordBattlefieldMode(containsSwordBattlefield);
+        setThreeAllianceBattlefieldMode(
+            !containsSwordBattlefield && entities.some(entity => entity?.battlefield === THREE_ALLIANCE_BATTLEFIELD_KEY)
+        );
         syncMarkedHaloAnimation();
         markChangesSaved();
     } catch (e) {

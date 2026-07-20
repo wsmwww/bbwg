@@ -102,13 +102,13 @@
                 <select v-model="selectedAllianceId" :disabled="!allianceOptions.length || updatingMembers" @change="updateAllianceMembers">
                   <option value="">请选择联盟</option>
                   <option v-for="alliance in allianceOptions" :key="alliance.id" :value="String(alliance.id)">
-                    {{ alliance.abbr ? `[${alliance.abbr}] ` : '' }}{{ alliance.name }}
+                    {{ alliance.name && alliance.name !== alliance.abbr ? `[${alliance.abbr}] ${alliance.name}` : alliance.abbr || alliance.name }}
                   </option>
                 </select>
               </label>
             </div>
             <p class="settings-card__hint">
-              从该区全部个人榜单聚合成员并按 UID 去重；数据只覆盖至少进入一个榜单前 100 名的成员，不等同于完整联盟名册。
+              读取当前批次的区服玩家数据；选择联盟后按联盟简称重新查询，并同步英雄实力、宠物实力和秘境数据。
             </p>
             <p class="ranking-settings__status" :class="{ 'is-error': requestError }">
               {{ requestError || memberStatus || '选择联盟后将自动替换地图成员数据' }}
@@ -119,9 +119,8 @@
       </section>
     </section>
 
-    <Teleport to="body">
-      <div v-if="showMemberDrawer" class="member-drawer-mask" @click.self="showMemberDrawer = false">
-        <aside class="alliance-member-panel member-drawer" aria-label="联盟成员列表">
+    <div v-if="showMemberDrawer" class="member-drawer-mask" @click.self="showMemberDrawer = false">
+        <aside class="alliance-member-panel member-drawer" role="dialog" aria-modal="true" aria-label="联盟成员列表">
           <div class="alliance-member-panel__head">
             <div>
               <span>ALLIANCE ROSTER</span>
@@ -145,8 +144,7 @@
           </div>
           <div v-else class="leader-empty">选择区服和联盟后显示成员</div>
         </aside>
-      </div>
-    </Teleport>
+    </div>
 
     <section class="updates-section" aria-label="更新记录">
       <button class="updates-toggle" type="button" :aria-expanded="showUpdates" @click="showUpdates = !showUpdates">
@@ -177,6 +175,7 @@ import { computed, onMounted, ref } from 'vue';
 import mapSeriesBackground from './assets/map-series-bg-wide.png';
 import {
   collectAllianceMembers,
+  fetchAllianceRanking,
   fetchServerIds,
   fetchServerRanking,
   getAllianceOptions,
@@ -329,7 +328,7 @@ async function updateAllianceMembers() {
   requestError.value = '';
   updatingMembers.value = true;
   try {
-    const payload = await fetchServerRanking(selectedServer.value);
+    const payload = await fetchAllianceRanking(selectedServer.value, selectedAllianceId.value);
     serverPayload.value = payload;
     allianceOptions.value = getAllianceOptions(payload);
     const alliance = allianceOptions.value.find(item => String(item.id) === selectedAllianceId.value);
@@ -337,7 +336,7 @@ async function updateAllianceMembers() {
     if (!members.length) throw new Error('没有在当前排行榜数据中找到该联盟成员');
     const settings = {
       serverId: Number(selectedServer.value),
-      allianceId: Number(selectedAllianceId.value),
+      allianceId: selectedAllianceId.value,
       allianceName: alliance?.name || '',
       allianceAbbr: alliance?.abbr || '',
       updatedAt: new Date().toISOString(),
@@ -414,7 +413,7 @@ onMounted(async () => {
   user-select: none;
 }
 
-.map-series > :not(.map-series__background) {
+.map-series > :not(.map-series__background):not(.member-drawer-mask) {
   position: relative;
   z-index: 2;
 }
@@ -1348,7 +1347,7 @@ onMounted(async () => {
 .member-drawer-mask {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 1000;
   display: flex;
   justify-content: flex-end;
   background: rgba(14, 21, 16, 0.36);

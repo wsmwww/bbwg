@@ -1,3 +1,7 @@
+<i> [webpack-dev-server] [HPM] Proxy created: /ranking-api  -> https://t2s.awzh.cn
+<i> [webpack-dev-server] [HPM] Proxy rewrite rule created: "^/ranking-api" ~> "/api/ranking"
+<i> [webpack-dev-server] [HPM] Proxy created: /info-api  -> http://localhost:8090
+<i> [webpack-dev-server] [HPM] Proxy rewrite rule created: "^/info-api" ~> ""
 <i> [webpack-dev-server] Project is running at:
 <i> [webpack-dev-server] Loopback: [36mhttp://localhost:8080/[39m
 <i> [webpack-dev-server] On Your Network (IPv4): [36mhttp://192.168.0.48:8080/[39m

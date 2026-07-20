@@ -10,7 +10,7 @@ registerMicroApps(
       name: 'vueApp',
       entry: '//localhost:8081',
       container: '#subapp-container',
-      activeRule: isActive('#/vue')
+      activeRule: isActive('#/bbwg')
     },
     {
       name: 'react-app',
@@ -39,5 +39,5 @@ start({
 });
 
 if (!location.hash) {
-  location.hash = '#/vue';
+  location.hash = '#/bbwg';
 }

@@ -106,9 +106,9 @@
                     <span><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">Q</kbd> 选择</span>
                     <span><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">W</kbd> 平移</span>
                     <span><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">E</kbd> 删除/擦除</span>
-                    <span><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">1-6</kbd> 建筑</span>
-                    <span><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">A</kbd> 联盟</span>
-                    <span><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">M</kbd> 模式</span>
+                    <span class="planner-building-shortcut"><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">1-6</kbd> 建筑</span>
+                    <span class="planner-alliance-shortcut"><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">A</kbd> 联盟</span>
+                    <span class="planner-mode-shortcut"><kbd class="rounded border border-gray-300 bg-gray-100 px-1 py-0.5 font-semibold">M</kbd> 模式</span>
                 </div>
             </div>
         </div>
@@ -227,7 +227,7 @@
 
             <div class="flex-1 overflow-y-auto planner-standard-panel">
                 <!-- Buildings Section -->
-                <div class="border-b">
+                <div class="border-b planner-building-section">
                     <button data-section="buildings" class="w-full px-4 py-3 flex justify-between items-center bg-gray-50 hover:bg-gray-100">
                         <span class="font-medium">建筑</span>
                         <span class="transform transition-transform" id="buildingsArrow">▼</span>
@@ -389,7 +389,7 @@
                             <div class="flex items-center gap-2">
                                 <label for="citySort" class="text-sm font-medium">排序：</label>
                                 <select id="citySort" class="flex-1 text-sm border-2 border-gray-300 rounded-lg p-2 focus:border-blue-500 focus:outline-none">
-                                     <option value="team">队伍</option>
+                                    <option value="team" class="team-sort-option">队伍</option>
                                     <option value="name">名称</option>
                                 </select>
                             </div>
@@ -497,7 +497,7 @@
     <!-- Mobile Bottom Navigation -->
     <div id="mobileNav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
         <div class="flex justify-around">
-            <button data-mobile="buildings" class="flex-1 p-4 text-center">
+            <button data-mobile="buildings" class="flex-1 p-4 text-center planner-mobile-building-nav">
                 <span class="block text-sm">建筑</span>
             </button>
             <button data-mobile="cities" class="flex-1 p-4 text-center">
@@ -574,14 +574,14 @@
         <div id="mobileCities" class="mobile-panel">
             <div class="bg-white p-4">
                 <h3 class="font-medium mb-4">城市</h3>
-                <div class="mb-3">
+                <div class="mb-3 planner-map-mode">
                     <span class="text-sm font-medium">模式 (M):</span>
                     <div class="mt-1 flex w-full items-center rounded-lg border border-gray-200 bg-gray-100 p-1" role="group" aria-label="移动端地图模式切换">
                         <button type="button" data-mode="castle" aria-keyshortcuts="M" aria-pressed="false" class="flex-1 px-3 py-1 text-center text-xs font-medium rounded-md bg-transparent text-gray-500 hover:text-gray-700 transition-colors">王城</button>
                         <button type="button" data-mode="base" aria-keyshortcuts="M" aria-pressed="true" class="flex-1 px-3 py-1 text-center text-xs font-medium rounded-md bg-blue-500 text-white shadow-sm transition-colors">基地</button>
                     </div>
                 </div>
-                <div class="mb-2">
+                <div class="mb-2 planner-alliance-mode">
                     <span class="text-sm font-medium">联盟 (A):</span>
                     <div class="alliance-switch mt-1" role="group" aria-label="移动端联盟切换">
                         <button type="button" data-alliance="main" aria-keyshortcuts="A" aria-pressed="true">主盟</button>
@@ -631,7 +631,7 @@
                 <div class="flex items-center gap-2 mb-4">
                     <label for="mobileCitySort" class="text-sm font-medium">排序：</label>
                     <select id="mobileCitySort" class="flex-1 text-sm border-2 border-gray-300 rounded-lg p-2">
-                        <option value="team">队伍</option>
+                        <option value="team" class="team-sort-option">队伍</option>
                         <option value="name">名称</option>
                     </select>
                 </div>

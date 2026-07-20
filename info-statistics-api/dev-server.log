@@ -2,4 +2,4 @@
 > info-statistics-api@1.0.0 dev C:\Users\Administrator\Desktop\main-base\info-statistics-api
 > node src/server.js
 
-info-statistics-api listening on http://localhost:8090
+info-statistics-api listening on http://0.0.0.0:8090

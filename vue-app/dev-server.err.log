@@ -1,15 +1,7 @@
-<i> [webpack-dev-server] [HPM] Proxy created: /benben-ranking-api  -> https://benbenkshen.cn
-<i> [webpack-dev-server] [HPM] Proxy rewrite rule created: "^/benben-ranking-api" ~> "/data"
+<i> [webpack-dev-server] [HPM] Proxy created: /ranking-api  -> https://t2s.awzh.cn
+<i> [webpack-dev-server] [HPM] Proxy rewrite rule created: "^/ranking-api" ~> "/api/ranking"
 <i> [webpack-dev-server] Project is running at:
 <i> [webpack-dev-server] Loopback: [36mhttp://localhost:8081/[39m
 <i> [webpack-dev-server] On Your Network (IPv4): [36mhttp://192.168.0.48:8081/[39m
 <i> [webpack-dev-server] Content not from webpack is served from '[36mC:\Users\Administrator\Desktop\main-base\vue-app\public[39m' directory
 <i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
-<e> [webpack-dev-server] [HPM] ECONNRESET: Error: socket hang up
-<e>     at connResetException (internal/errors.js:628:14)
-<e>     at TLSSocket.socketCloseListener (_http_client.js:449:25)
-<e>     at TLSSocket.emit (events.js:412:35)
-<e>     at net.js:675:12
-<e>     at TCP.done (_tls_wrap.js:563:7) {
-<e>   code: 'ECONNRESET'
-<e> }

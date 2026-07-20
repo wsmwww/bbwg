@@ -1,8 +1,19 @@
+function isLocalNetworkHost(hostname) {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+  );
+}
+
 const API_BASE =
   window.__INFO_STATISTICS_API_BASE__ ||
   localStorage.getItem('benben-info-statistics-api-base') ||
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:8090'
+  (isLocalNetworkHost(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:8090`
     : `${window.location.origin}/info-api`);
 
 async function request(path, options = {}) {

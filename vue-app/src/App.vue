@@ -18,14 +18,25 @@
   />
   <LayoutPlanner
     v-else
+    :key="initialTemplate || 'default-map'"
     :initial-template="initialTemplate"
     @back-to-series="backToSeries"
   />
 </template>
 
 <script setup>
-import { defineAsyncComponent, ref } from 'vue';
+import { defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 import MapSeriesHome from './MapSeriesHome.vue';
+
+const ROUTES = {
+  home: '#/bbwg',
+  comparison: '#/bbwg/comparison',
+  infoStatistics: '#/bbwg/info-statistics',
+  defaultMap: '#/bbwg/map/default',
+  swordMap: '#/bbwg/map/sword',
+  threeAllianceMap: '#/bbwg/map/three-alliance',
+  infoCastleMap: '#/bbwg/map/info-castle'
+};
 
 const currentView = ref('home');
 const initialTemplate = ref('');
@@ -33,38 +44,75 @@ const LayoutPlanner = defineAsyncComponent(() => import('./LayoutPlanner.vue'));
 const PowerComparison = defineAsyncComponent(() => import('./PowerComparison.vue'));
 const InfoStatistics = defineAsyncComponent(() => import('./InfoStatistics.vue'));
 
+function applyHashRoute() {
+  const path = window.location.hash.split('?')[0];
+  if (path === ROUTES.comparison) {
+    currentView.value = 'comparison';
+    initialTemplate.value = '';
+  } else if (path === ROUTES.infoStatistics) {
+    currentView.value = 'info-statistics';
+    initialTemplate.value = '';
+  } else if (path === ROUTES.swordMap) {
+    currentView.value = 'planner';
+    initialTemplate.value = 'sword-battlefield';
+  } else if (path === ROUTES.threeAllianceMap) {
+    currentView.value = 'planner';
+    initialTemplate.value = 'three-alliance-battlefield';
+  } else if (path === ROUTES.infoCastleMap) {
+    currentView.value = 'planner';
+    initialTemplate.value = 'info-statistics-castle';
+  } else if (path === ROUTES.defaultMap) {
+    currentView.value = 'planner';
+    initialTemplate.value = '';
+  } else {
+    currentView.value = 'home';
+    initialTemplate.value = '';
+  }
+}
+
+function navigate(hash) {
+  if (window.location.hash === hash) applyHashRoute();
+  else window.location.hash = hash;
+}
+
 function openDefaultMap() {
   initialTemplate.value = '';
-  currentView.value = 'planner';
+  navigate(ROUTES.defaultMap);
 }
 
 function openSwordMap() {
   initialTemplate.value = 'sword-battlefield';
-  currentView.value = 'planner';
+  navigate(ROUTES.swordMap);
 }
 
 function openThreeAllianceMap() {
   initialTemplate.value = 'three-alliance-battlefield';
-  currentView.value = 'planner';
+  navigate(ROUTES.threeAllianceMap);
 }
 
 function openPowerComparison() {
-  currentView.value = 'comparison';
+  navigate(ROUTES.comparison);
 }
 
 function openInfoStatistics() {
-  currentView.value = 'info-statistics';
+  navigate(ROUTES.infoStatistics);
 }
 
 function openInfoCastleLayout() {
   initialTemplate.value = 'info-statistics-castle';
-  currentView.value = 'planner';
+  navigate(ROUTES.infoCastleMap);
 }
 
 function backToSeries() {
-  currentView.value = 'home';
-  initialTemplate.value = '';
+  navigate(ROUTES.home);
 }
+
+onMounted(() => {
+  applyHashRoute();
+  window.addEventListener('hashchange', applyHashRoute);
+});
+
+onBeforeUnmount(() => window.removeEventListener('hashchange', applyHashRoute));
 </script>
 
 <style>
