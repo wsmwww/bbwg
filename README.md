@@ -69,19 +69,9 @@ GET/POST/PUT/DELETE http://localhost:8090/api/info-registrations
 
 ## 联盟排行榜接口
 
-地图系列会通过 `/benben-ranking-api` 读取区服和联盟排行榜。本地开发服务器已经代理到
-`https://benbenkshen.cn/data`。生产环境需要配置同名反向代理，否则浏览器会因为跨域限制
+地图系列会通过 `/benben-ranking-api` 读取区服和联盟排行榜。
 无法直接读取数据站。
 
-Nginx 示例：
-
-```nginx
-location /benben-ranking-api/ {
-    proxy_pass https://benbenkshen.cn/data/;
-    proxy_set_header Host benbenkshen.cn;
-    proxy_ssl_server_name on;
-}
-```
 
 也可以在加载微应用前设置 `window.__BENBEN_RANKING_API_BASE__`，指定其他同源代理地址。
 
