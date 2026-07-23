@@ -19,4 +19,13 @@ modules by path [1m./src/[39m[22m 11.1 KiB
   [1m./src/main.jsx[39m[22m 8.06 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/style.css[39m[22m 2.25 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   ./node_modules/css-loader/dist/cjs.js![1m./src/style.css[39m[22m 848 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 3048 ms
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 3284 ms
+assets by path [1m[32m*.js[39m[22m 1.15 MiB
+  asset [1m[32mbundle.js[39m[22m 1.15 MiB [1m[32m[emitted][39m[22m (name: main)
+  asset [1m[32mmain.7b12e937379998019c67.hot-update.js[39m[22m 291 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m (name: main)
+asset [1m[32mindex.html[39m[22m 303 bytes [1m[32m[emitted][39m[22m
+asset [1m[32mmain.7b12e937379998019c67.hot-update.json[39m[22m 28 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
+Entrypoint [1mmain[39m[22m 1.15 MiB = [1m[32mbundle.js[39m[22m 1.15 MiB [1m[32mmain.7b12e937379998019c67.hot-update.js[39m[22m 291 bytes
+cached modules 1.08 MiB [1m[32m[cached][39m[22m 42 modules
+runtime modules 26.3 KiB 12 modules
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 38 ms

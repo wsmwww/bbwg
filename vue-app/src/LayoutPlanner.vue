@@ -10,6 +10,46 @@
         <span>返回地图系列</span>
     </button>
 
+    <div id="pkBattleDetailPanel" class="pk-battle-detail hidden" role="dialog" aria-modal="false" aria-labelledby="pkBattleDetailTitle">
+        <div class="pk-battle-detail__card">
+            <div class="pk-battle-detail__head">
+                <div>
+                    <p>PK BATTLE</p>
+                    <h2 id="pkBattleDetailTitle">据点交战</h2>
+                </div>
+                <button id="pkBattleDetailClose" type="button" aria-label="关闭">×</button>
+            </div>
+            <div class="pk-battle-detail__summary">
+                <div class="pk-battle-side pk-battle-side--red">
+                    <span>防守部队</span>
+                    <strong id="pkBattleLeftCount">0 人</strong>
+                    <em id="pkBattleLeftPower">0</em>
+                </div>
+                <div class="pk-battle-detail__versus">PK</div>
+                <div class="pk-battle-side pk-battle-side--blue">
+                    <span>进攻部队</span>
+                    <strong id="pkBattleRightCount">0 人</strong>
+                    <em id="pkBattleRightPower">0</em>
+                </div>
+            </div>
+            <div class="pk-battle-detail__bar">
+                <span id="pkBattleLeftBar"></span>
+                <span id="pkBattleRightBar"></span>
+            </div>
+            <div id="pkBattleStatusHint" class="pk-battle-detail__hint pk-battle-detail__hint--locked">双方被卡死</div>
+            <div class="pk-battle-detail__lists">
+                <div>
+                    <h3 id="pkBattleLeftListTitle">防守成员</h3>
+                    <ul id="pkBattleLeftList"></ul>
+                </div>
+                <div>
+                    <h3 id="pkBattleRightListTitle">进攻成员</h3>
+                    <ul id="pkBattleRightList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <aside id="powerRankingPanel" aria-label="战力排名">
         <div class="power-ranking-card">
             <div class="power-ranking-head">

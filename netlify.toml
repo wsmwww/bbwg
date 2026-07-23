@@ -3,3 +3,9 @@
   to = "https://t2s.awzh.cn/api/ranking/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/legacy-ranking-api/*"
+  to = "https://benbenkshen.cn/data/:splat"
+  status = 200
+  force = true

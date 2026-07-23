@@ -70,6 +70,12 @@ module.exports = (env, argv) => {
         changeOrigin: true,
         secure: true,
         pathRewrite: { '^/ranking-api': '/api/ranking' }
+      },
+      '/legacy-ranking-api': {
+        target: 'https://benbenkshen.cn',
+        changeOrigin: true,
+        secure: true,
+        pathRewrite: { '^/legacy-ranking-api': '/data' }
       }
     }
   },

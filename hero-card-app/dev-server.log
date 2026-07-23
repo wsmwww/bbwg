@@ -19,4 +19,4 @@ modules by path [1m./src/[39m[22m 5.19 KiB
   [1m./src/index.js[39m[22m 2.21 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/style.css[39m[22m 2.25 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   ./node_modules/css-loader/dist/cjs.js![1m./src/style.css[39m[22m 748 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 1455 ms
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 1600 ms

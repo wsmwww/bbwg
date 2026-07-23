@@ -6,6 +6,7 @@
     @open-three-alliance-map="openThreeAllianceMap"
     @open-power-comparison="openPowerComparison"
     @open-info-statistics="openInfoStatistics"
+    @open-activity-calendar="openActivityCalendar"
   />
   <PowerComparison
     v-else-if="currentView === 'comparison'"
@@ -15,6 +16,10 @@
     v-else-if="currentView === 'info-statistics'"
     @back-to-series="backToSeries"
     @open-castle-layout="openInfoCastleLayout"
+  />
+  <ActivityCalendar
+    v-else-if="currentView === 'activity-calendar'"
+    @back-to-series="backToSeries"
   />
   <LayoutPlanner
     v-else
@@ -32,6 +37,7 @@ const ROUTES = {
   home: '#/bbwg',
   comparison: '#/bbwg/comparison',
   infoStatistics: '#/bbwg/info-statistics',
+  activityCalendar: '#/bbwg/activity-calendar',
   defaultMap: '#/bbwg/map/default',
   swordMap: '#/bbwg/map/sword',
   threeAllianceMap: '#/bbwg/map/three-alliance',
@@ -43,6 +49,7 @@ const initialTemplate = ref('');
 const LayoutPlanner = defineAsyncComponent(() => import('./LayoutPlanner.vue'));
 const PowerComparison = defineAsyncComponent(() => import('./PowerComparison.vue'));
 const InfoStatistics = defineAsyncComponent(() => import('./InfoStatistics.vue'));
+const ActivityCalendar = defineAsyncComponent(() => import('./ActivityCalendar.vue'));
 
 function applyHashRoute() {
   const path = window.location.hash.split('?')[0];
@@ -51,6 +58,9 @@ function applyHashRoute() {
     initialTemplate.value = '';
   } else if (path === ROUTES.infoStatistics) {
     currentView.value = 'info-statistics';
+    initialTemplate.value = '';
+  } else if (path === ROUTES.activityCalendar) {
+    currentView.value = 'activity-calendar';
     initialTemplate.value = '';
   } else if (path === ROUTES.swordMap) {
     currentView.value = 'planner';
@@ -96,6 +106,10 @@ function openPowerComparison() {
 
 function openInfoStatistics() {
   navigate(ROUTES.infoStatistics);
+}
+
+function openActivityCalendar() {
+  navigate(ROUTES.activityCalendar);
 }
 
 function openInfoCastleLayout() {

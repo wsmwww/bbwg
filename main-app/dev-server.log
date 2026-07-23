@@ -2,8 +2,8 @@
 > qiankun-main-app@1.0.0 dev C:\Users\Administrator\Desktop\main-base\main-app
 > webpack serve --mode development
 
-asset [1m[32mbundle.804f0b6ae68381b58cb0.js[39m[22m 706 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m (name: main)
-asset [1m[32mindex.html[39m[22m 736 bytes [1m[32m[emitted][39m[22m
+asset [1m[32mbundle.7bd42a4da388262ffea0.js[39m[22m 706 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m (name: main)
+asset [1m[32mindex.html[39m[22m 737 bytes [1m[32m[emitted][39m[22m
 asset [1m[32m_redirects[39m[22m 61 bytes [1m[32m[emitted][39m[22m
 runtime modules 27.5 KiB 14 modules
 orphan modules 2.2 KiB [1m[33m[orphan][39m[22m 4 modules
@@ -18,15 +18,14 @@ modules by path [1m./node_modules/import-html-entry/esm/*.js[39m[22m 33.5 KiB
 modules by path [1m./src/[39m[22m 5.36 KiB 3 modules
 modules by path [1m./node_modules/css-loader/dist/runtime/*.js[39m[22m 2.31 KiB 2 modules
 + 3 modules
-webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 2179 ms
-assets by info 707 KiB [1m[32m[immutable][39m[22m
-  asset [1m[32mbundle.dec48d5ccfc5a66699b8.js[39m[22m 706 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m (name: main)
-  asset [1m[32mmain.825320c48f232042acb7.hot-update.js[39m[22m 1.81 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m (name: main)
-  asset [1m[32mmain.825320c48f232042acb7.hot-update.json[39m[22m 28 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 2543 ms
+assets by info 706 KiB [1m[32m[immutable][39m[22m
+  asset [1m[32mbundle.b740d9e0b8bdbeecb195.js[39m[22m 706 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m (name: main)
+  asset [1m[32mmain.7e049af7efda20efe2b0.hot-update.js[39m[22m 296 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m (name: main)
+  asset [1m[32mmain.7e049af7efda20efe2b0.hot-update.json[39m[22m 28 bytes [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m [1m[32m[hmr][39m[22m
 asset [1m[32mindex.html[39m[22m 737 bytes [1m[32m[emitted][39m[22m
 asset [1m[32m_redirects[39m[22m 61 bytes [1m[32m[emitted][39m[22m
-Entrypoint [1mmain[39m[22m 707 KiB = [1m[32mbundle.dec48d5ccfc5a66699b8.js[39m[22m 706 KiB [1m[32mmain.825320c48f232042acb7.hot-update.js[39m[22m 1.81 KiB
-cached modules 490 KiB [1m[32m[cached][39m[22m 278 modules
+Entrypoint [1mmain[39m[22m 706 KiB = [1m[32mbundle.b740d9e0b8bdbeecb195.js[39m[22m 706 KiB [1m[32mmain.7e049af7efda20efe2b0.hot-update.js[39m[22m 296 bytes
+cached modules 491 KiB [1m[32m[cached][39m[22m 279 modules
 runtime modules 27.5 KiB 14 modules
-[1m./src/index.js[39m[22m 1.01 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 430 ms
+webpack 5.76.3 compiled [1m[32msuccessfully[39m[22m in 92 ms

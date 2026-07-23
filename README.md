@@ -1,27 +1,30 @@
-<<<<<<< HEAD
-﻿# qiankun micro frontend demo
+# bbwg 沙盘项目
 
-This folder contains four small projects:
+这是一个基于 qiankun 的微前端项目，主入口用于展示沙盘地图、联盟成员、信息统计、实力对比和活动日历等模块。
 
-- `main-app`: qiankun host application
-- `vue-app`: Vue 3 micro application
-- `react-app`: React 17 micro application
-- `hero-card-app`: hero card group micro application
-- `info-statistics-api`: information statistics API service
+## 项目结构
 
-## Run
+- `main-app`：qiankun 主应用
+- `vue-app`：Vue 3 沙盘主功能应用
+- `react-app`：React 17 微应用
+- `hero-card-app`：英雄卡片微应用
+- `info-statistics-api`：信息统计本地接口服务
 
-Double-click from this folder:
+## 本地运行
 
-- `启动全部项目.bat`: start the main app and all micro apps
-- `重启全部项目.bat`: stop ports 8080/8081/8082/8084, then start all apps again
-- `停止全部项目.bat`: stop all apps
+可以直接双击根目录脚本：
 
-Then open http://localhost:8080.
+- `启动全部项目.bat`：启动主应用和所有微应用
+- `重启全部项目.bat`：停止 8080/8081/8082/8084 端口后重新启动
+- `停止全部项目.bat`：停止所有项目
 
-Manual run:
+启动后打开：
 
-Open four terminals:
+```text
+http://localhost:8080
+```
+
+也可以手动启动：
 
 ```bash
 cd main-app
@@ -47,15 +50,13 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:8080.
+常用端口：
 
-Ports:
-
-- main app: http://localhost:8080
-- vue app: http://localhost:8081
-- react app: http://localhost:8082
-- hero card app: http://localhost:8084
-- information statistics API: http://localhost:8090
+- 主应用：http://localhost:8080
+- Vue 沙盘应用：http://localhost:8081
+- React 应用：http://localhost:8082
+- 英雄卡片应用：http://localhost:8084
+- 信息统计 API：http://localhost:8090
 
 ## 信息统计接口
 
@@ -65,19 +66,57 @@ Ports:
 GET/POST/PUT/DELETE http://localhost:8090/api/info-registrations
 ```
 
-当前后端使用 `info-statistics-api/data/info-registrations.json` 做本地持久化。以后换 Supabase、LeanCloud、MySQL 等云端数据库时，保留接口路径不变，只替换 `info-statistics-api/src/repositories` 的实现即可。
+当前后端使用：
+
+```text
+info-statistics-api/data/info-registrations.json
+```
+
+作为本地持久化文件。以后如果更换 Supabase、LeanCloud、MySQL 等云端数据库，只需要保持接口路径不变，并替换 `info-statistics-api/src/repositories` 内的实现。
 
 ## 联盟排行榜接口
 
-地图系列会通过 `/benben-ranking-api` 读取区服和联盟排行榜。
-无法直接读取数据站。
+地图系列通过 `/benben-ranking-api` 读取当前数据源的区服和联盟排行榜。
 
+同时支持管理员切换数据源：
 
-也可以在加载微应用前设置 `window.__BENBEN_RANKING_API_BASE__`，指定其他同源代理地址。
+- 当前数据：`https://t2s.awzh.cn`
+- 旧版数据：`https://benbenkshen.cn`
 
-Netlify 部署已经通过根目录 `netlify.toml` 和构建产物中的 `_redirects` 配置同一条代理规则。
-修改后必须重新部署；直接访问 `/benben-ranking-api/servers.json` 应返回区服 JSON，而不是 Netlify 404 页面。
-=======
-# bbwg
-slg  layout planning
->>>>>>> c23bac441e7b8d8a62caf786afbc49ec1c850aa9
+旧版接口示例：
+
+```text
+https://benbenkshen.cn/data/servers.json
+https://benbenkshen.cn/data/1.json
+```
+
+Netlify 部署通过根目录 `netlify.toml` 和构建产物 `_redirects` 配置代理规则。修改代理后需要重新部署。
+
+## 更新记录
+
+### 2026-07-23 活动日历与 APP 端体验优化
+
+- 新增“活动日历”模块，读取活动排期接口，按月份展示活动图标、颜色和持续日期。
+- 活动日历改为正常月历视图，并在每周日期行下方展示跨日期活动横条，一眼看清活动持续时间。
+- 点击日历日期后，下方会展示当天全部活动，解决单日活动较多时日历展示不完整的问题。
+- APP 端首页隐藏默认地图、神剑战场和三盟争霸入口，避免小屏进入网格地图后看不到配置信息。
+- 信息统计模块在 APP 端隐藏王城网格入口，只保留盟友信息列表、搜索、保存、导出和表单填写功能。
+- 首页更新记录默认展开，手机端进入首页后可以直接看到最近功能变化。
+
+### 2026-07-21 三盟争霸与数据源管理优化
+
+- 三盟争霸地图新增高亮据点 PK 进度条，普通据点显示 3 vs 12，中心潮汐神殿显示 12 vs 7。
+- 点击 PK 进度条可打开对战详情弹窗，展示双方人数、模拟战力、完整成员列表和战况提示。
+- PK 战况规则优化：双方队列都大于等于 5 人时提示“可突击、撤退”，否则提示“双方被卡死”。
+- 首页管理员数据源切换改为独立小面板，验证一次账号密码后即可随时切换当前数据和旧版数据。
+- 管理员入口移动到“联盟成员”按钮旁边，减少页面底部横条占位，让首页操作区更集中。
+- 信息统计模块数据已与三盟争霸、神剑战场、基础地图隔离，编辑统计信息不会再覆盖地图成员数据。
+
+### 2026-07-13 联盟成员自动同步与地图稳定性修复
+
+- 地图方案新增“实力对比”入口卡片，进入独立页面后可左右查看两个区服的完整排行榜。
+- 区服下拉框新增 1–99、100、200、300、400、500+ 区段按钮，快速缩小区服选择范围。
+- 地图系列首页新增区服与联盟选择，选中联盟后立即请求排行榜、筛选联盟成员并按 UID 去重，无需额外点击更新。
+- 联盟设置右侧完整展示当前联盟的上榜成员，战力前 10 名自动标记为车头并同步到所有地图。
+- 已保存的区服和联盟会在再次进入时自动同步，地图成员榜刷新时也会重新读取当前联盟数据。
+- 移除地图初始化对外部 CDN 的依赖，修复 fflate 加载失败导致地图无法进入的问题。

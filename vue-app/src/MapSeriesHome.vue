@@ -5,10 +5,55 @@
       <p class="map-series__eyebrow">BENBEN KINGDOM</p>
       <h1>地图系列</h1>
       <p>选择一个地图方案进入编辑。神剑战场会直接展开成员战力榜，并生成已经配置好的基础布局。</p>
-      <button class="roster-drawer-button" type="button" @click="showMemberDrawer = true">
-        <span>联盟成员</span>
-        <strong>{{ memberPreview.length }} 人</strong>
-      </button>
+      <div class="map-series__hero-actions">
+        <button class="roster-drawer-button" type="button" @click="showMemberDrawer = true">
+          <span>联盟成员</span>
+          <strong>{{ memberPreview.length }} 人</strong>
+        </button>
+        <div class="admin-source-control" :class="{ 'is-open': showAdminSourcePanel }">
+          <button class="admin-source-trigger" type="button" @click="showAdminSourcePanel = !showAdminSourcePanel">
+            <span>管理员</span>
+            <strong>{{ currentRankingSource === 'legacy' ? '旧版数据' : '当前数据' }}</strong>
+          </button>
+          <div v-if="showAdminSourcePanel" class="admin-source-popover">
+            <template v-if="adminAuthed">
+              <div class="admin-source-popover__head">
+                <span>数据代理</span>
+                <button type="button" @click="logoutAdminSource">退出</button>
+              </div>
+              <div class="admin-source-options" role="group" aria-label="数据代理切换">
+                <button
+                  type="button"
+                  :class="{ active: currentRankingSource === 'current' }"
+                  @click="switchRankingSource('current')"
+                >
+                  当前数据
+                </button>
+                <button
+                  type="button"
+                  :class="{ active: currentRankingSource === 'legacy' }"
+                  @click="switchRankingSource('legacy')"
+                >
+                  旧版数据
+                </button>
+              </div>
+              <p>{{ adminSourceMessage || '已验证，可随时切换数据源。' }}</p>
+            </template>
+            <form v-else class="admin-source-login" @submit.prevent="loginAdminSource">
+              <label>
+                <span>账号</span>
+                <input v-model.trim="adminLoginUser" type="text" autocomplete="username" placeholder="admin" />
+              </label>
+              <label>
+                <span>密码</span>
+                <input v-model="adminLoginSecret" type="password" autocomplete="current-password" placeholder="请输入密码" />
+              </label>
+              <button type="submit">验证并管理</button>
+              <p v-if="adminSourceMessage">{{ adminSourceMessage }}</p>
+            </form>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="map-section" aria-label="地图入口">
@@ -64,6 +109,18 @@
           <span class="map-card__title">信息统计</span>
           <span class="map-card__desc">登记盟友报名资料、在线时间、语音、钻石、兵力、城堡等级和分工意愿。</span>
           <span class="map-card__action">进入信息统计</span>
+        </button>
+
+        <button class="map-card map-card--activity" type="button" @click="$emit('open-activity-calendar')">
+          <span class="map-card__calendar-art" aria-hidden="true">
+            <i v-for="item in 35" :key="item"></i>
+            <b>23</b>
+          </span>
+          <span class="map-card__shade" aria-hidden="true"></span>
+          <span class="map-card__badge">日历</span>
+          <span class="map-card__title">活动日历</span>
+          <span class="map-card__desc">读取活动排期接口，按月份展示活动图标、颜色和持续日期，兼容手机端查看。</span>
+          <span class="map-card__action">查看活动日历</span>
         </button>
       </div>
     </section>
@@ -179,15 +236,19 @@ import {
   fetchServerIds,
   fetchServerRanking,
   getAllianceOptions,
+  getRankingSource,
   loadAllianceSettings,
-  saveAllianceSelection
+  saveAllianceSelection,
+  setRankingSource
 } from './alliance-member-service';
 
-defineEmits(['open-default-map', 'open-sword-map', 'open-three-alliance-map', 'open-power-comparison', 'open-info-statistics']);
+defineEmits(['open-default-map', 'open-sword-map', 'open-three-alliance-map', 'open-power-comparison', 'open-info-statistics', 'open-activity-calendar']);
 
 const STORAGE_KEY = 'benben-alliance-leaders';
-const showUpdates = ref(false);
+const ADMIN_AUTH_STORAGE_KEY = 'bbwg-admin-source-authed';
+const showUpdates = ref(true);
 const showMemberDrawer = ref(false);
+const showAdminSourcePanel = ref(false);
 const serverIds = ref([]);
 const selectedServer = ref('');
 const serverRangeStart = ref(1);
@@ -199,6 +260,11 @@ const updatingMembers = ref(false);
 const requestError = ref('');
 const memberStatus = ref('');
 const memberPreview = ref([]);
+const currentRankingSource = ref(getRankingSource());
+const adminAuthed = ref(localStorage.getItem(ADMIN_AUTH_STORAGE_KEY) === 'true');
+const adminLoginUser = ref('admin');
+const adminLoginSecret = ref('');
+const adminSourceMessage = ref('');
 const runtimePublicPath = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || `${window.location.origin}/`;
 const defaultCover = `${runtimePublicPath.replace(/\/?$/, '/')}images/bear-pit.png`;
 const swordCover = `${runtimePublicPath.replace(/\/?$/, '/')}images/sword-cover.png`;
@@ -221,6 +287,30 @@ const filteredServerIds = computed(() => serverIds.value.filter(server => {
 }));
 
 const updateRecords = [
+  {
+    date: '2026-07-23',
+    title: '活动日历与 APP 端体验优化',
+    items: [
+      '新增“活动日历”模块，读取活动排期接口，按月份展示活动图标、颜色和持续日期。',
+      '活动日历改为正常月历视图，并在每周日期行下方展示跨日期活动横条，一眼看清活动持续时间。',
+      '点击日历日期后，下方会展示当天全部活动，解决单日活动较多时日历展示不完整的问题。',
+      'APP 端首页隐藏默认地图、神剑战场和三盟争霸入口，避免小屏进入网格地图后看不到配置信息。',
+      '信息统计模块在 APP 端隐藏王城网格入口，只保留盟友信息列表、搜索、保存、导出和表单填写功能。',
+      '首页更新记录默认展开，手机端进入首页后可以直接看到最近功能变化。'
+    ]
+  },
+  {
+    date: '2026-07-21',
+    title: '三盟争霸与数据源管理优化',
+    items: [
+      '三盟争霸地图新增高亮据点 PK 进度条，普通据点显示 3 vs 12，中心潮汐神殿显示 12 vs 7。',
+      '点击 PK 进度条可打开对战详情弹窗，展示双方人数、模拟战力、完整成员列表和战况提示。',
+      'PK 战况规则优化：双方队列都大于等于 5 人时提示“可突击、撤退”，否则提示“双方被卡死”。',
+      '首页管理员数据源切换改为独立小面板，验证一次账号密码后即可随时切换当前数据和旧版数据。',
+      '管理员入口移动到“联盟成员”按钮旁边，减少页面底部横条占位，让首页操作区更集中。',
+      '信息统计模块数据已与三盟争霸、神剑战场、基础地图隔离，编辑统计信息不会再覆盖地图成员数据。'
+    ]
+  },
   {
     date: '2026-07-13',
     title: '联盟成员自动同步与地图稳定性修复',
@@ -300,6 +390,72 @@ function selectServerRange(start) {
   requestError.value = '';
 }
 
+function getConfiguredAdminUser() {
+  return String(window.__BBWG_ADMIN_USER__ || 'admin').trim();
+}
+
+function getConfiguredAdminSecret() {
+  return String(window.__BBWG_ADMIN_SECRET__ || 'bbwg2026').trim();
+}
+
+function loginAdminSource() {
+  const configuredUser = getConfiguredAdminUser();
+  const enteredUser = String(adminLoginUser.value || '').trim();
+  const enteredSecret = String(adminLoginSecret.value || '').trim();
+  const userOk = !configuredUser || enteredUser === configuredUser;
+  const secretOk = enteredSecret === getConfiguredAdminSecret();
+  if (!userOk || !secretOk) {
+    adminSourceMessage.value = '账号或密码错误';
+    return;
+  }
+  adminAuthed.value = true;
+  localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'true');
+  adminLoginSecret.value = '';
+  adminSourceMessage.value = '验证成功，可随时切换数据源。';
+}
+
+function logoutAdminSource() {
+  adminAuthed.value = false;
+  localStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+  adminLoginSecret.value = '';
+  adminSourceMessage.value = '已退出管理员模式';
+}
+
+async function switchRankingSource(targetSource = '') {
+  if (!adminAuthed.value) {
+    showAdminSourcePanel.value = true;
+    adminSourceMessage.value = '请先输入管理员账号和密码';
+    return;
+  }
+  const nextSource = targetSource === 'legacy' || targetSource === 'current'
+    ? targetSource
+    : currentRankingSource.value === 'legacy' ? 'current' : 'legacy';
+  if (nextSource === currentRankingSource.value) {
+    adminSourceMessage.value = '当前已经是这个数据源';
+    return;
+  }
+  const nextLabel = nextSource === 'legacy' ? '路线2数据' : '当前路线1 数据';
+
+  setRankingSource(nextSource);
+  currentRankingSource.value = nextSource;
+  selectedServer.value = '';
+  selectedAllianceId.value = '';
+  allianceOptions.value = [];
+  memberPreview.value = [];
+  requestError.value = '';
+  memberStatus.value = `已切换到${nextLabel}`;
+  adminSourceMessage.value = `已切换到${nextLabel}`;
+  loadingServers.value = true;
+  try {
+    serverIds.value = await fetchServerIds();
+    serverRangeStart.value = 1;
+  } catch (error) {
+    requestError.value = error?.message || '切换数据源后读取区服失败';
+  } finally {
+    loadingServers.value = false;
+  }
+}
+
 async function loadAlliances({ restoreAllianceId = '' } = {}) {
   requestError.value = '';
   memberStatus.value = '';
@@ -329,8 +485,7 @@ async function updateAllianceMembers() {
   updatingMembers.value = true;
   try {
     const payload = await fetchAllianceRanking(selectedServer.value, selectedAllianceId.value);
-    serverPayload.value = payload;
-    allianceOptions.value = getAllianceOptions(payload);
+    // Keep the server-level alliance list intact so users can switch alliances without reselecting the server.
     const alliance = allianceOptions.value.find(item => String(item.id) === selectedAllianceId.value);
     const members = collectAllianceMembers(payload, selectedAllianceId.value);
     if (!members.length) throw new Error('没有在当前排行榜数据中找到该联盟成员');
@@ -451,11 +606,18 @@ onMounted(async () => {
   color: rgba(47, 58, 42, 0.78);
 }
 
+.map-series__hero-actions {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 .roster-drawer-button {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: 18px;
   border: 1px solid rgba(96, 112, 68, 0.28);
   border-radius: 999px;
   padding: 9px 14px;
@@ -482,8 +644,8 @@ onMounted(async () => {
 .settings-section,
 .updates-section {
   grid-column: 1;
-  width: min(100%, 1280px);
-  max-width: 1280px;
+  /* width: min(100%, 1280px);
+  max-width: 1280px; */
 }
 
 .map-section {
@@ -511,7 +673,7 @@ onMounted(async () => {
 
 .map-card-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 14px;
 }
 
@@ -560,7 +722,8 @@ onMounted(async () => {
 .map-card--sword,
 .map-card--three-alliance,
 .map-card--comparison,
-.map-card--info {
+.map-card--info,
+.map-card--activity {
   min-height: 280px;
   justify-content: flex-end;
   color: #fff8df;
@@ -591,6 +754,11 @@ onMounted(async () => {
   background: linear-gradient(145deg, #24351f, #6f8758);
 }
 
+.map-card--activity {
+  border-color: rgba(40, 120, 168, 0.46);
+  background: linear-gradient(145deg, #1e3655, #2f7f8c);
+}
+
 .map-card__comparison-art {
   position: absolute;
   inset: 0;
@@ -619,6 +787,51 @@ onMounted(async () => {
   background-size: 20px 20px, 20px 20px, auto;
   transform: scale(1);
   transition: transform 0.45s ease;
+}
+
+.map-card__calendar-art {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  padding: 22px 18px 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 30% 22%, rgba(243, 192, 77, 0.38), transparent 28%),
+    linear-gradient(135deg, #1e506c, #2f7f8c);
+  transform: scale(1);
+  transition: transform 0.45s ease;
+}
+
+.map-card__calendar-art i {
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.map-card__calendar-art i:nth-child(6n) {
+  background: rgba(243, 192, 77, 0.54);
+}
+
+.map-card__calendar-art i:nth-child(8n) {
+  background: rgba(255, 103, 118, 0.58);
+}
+
+.map-card__calendar-art b {
+  position: absolute;
+  right: 24px;
+  top: 26px;
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 16px;
+  color: #4b3b17;
+  background: #f3c04d;
+  box-shadow: 0 16px 30px rgba(11, 37, 48, 0.28);
+  font-size: 24px;
+  font-weight: 1000;
 }
 
 .map-card__info-art i {
@@ -723,7 +936,8 @@ onMounted(async () => {
 .map-card--three-alliance:hover .map-card__image,
 .map-card--three-alliance:hover::before,
 .map-card--comparison:hover .map-card__comparison-art,
-.map-card--info:hover .map-card__info-art {
+.map-card--info:hover .map-card__info-art,
+.map-card--activity:hover .map-card__calendar-art {
   transform: scale(1.055);
 }
 
@@ -766,6 +980,11 @@ onMounted(async () => {
   background: linear-gradient(135deg, #e7c66d, #89b667);
 }
 
+.map-card--activity .map-card__badge {
+  color: #153442;
+  background: linear-gradient(135deg, #f3c04d, #8ed8e8);
+}
+
 .map-card__title,
 .map-card__desc,
 .map-card__action {
@@ -798,7 +1017,8 @@ onMounted(async () => {
 .map-card--sword .map-card__action,
 .map-card--three-alliance .map-card__action,
 .map-card--comparison .map-card__action,
-.map-card--info .map-card__action {
+.map-card--info .map-card__action,
+.map-card--activity .map-card__action {
   color: #ffd980;
 }
 
@@ -806,7 +1026,8 @@ onMounted(async () => {
 .map-card--sword .map-card__title,
 .map-card--three-alliance .map-card__title,
 .map-card--comparison .map-card__title,
-.map-card--info .map-card__title {
+.map-card--info .map-card__title,
+.map-card--activity .map-card__title {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
@@ -814,7 +1035,8 @@ onMounted(async () => {
 .map-card--sword .map-card__desc,
 .map-card--three-alliance .map-card__desc,
 .map-card--comparison .map-card__desc,
-.map-card--info .map-card__desc {
+.map-card--info .map-card__desc,
+.map-card--activity .map-card__desc {
   color: rgba(255, 248, 223, 0.86);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.38);
 }
@@ -1386,6 +1608,151 @@ onMounted(async () => {
   }
 }
 
+.admin-source-control {
+  position: relative;
+  z-index: 12;
+  width: 260px;
+  color: #2f3a2a;
+}
+
+.admin-source-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid rgba(67, 80, 58, 0.24);
+  border-radius: 999px;
+  padding: 8px 10px 8px 14px;
+  color: #31402c;
+  background: rgba(255, 250, 240, 0.94);
+  box-shadow: 0 12px 26px rgba(25, 34, 20, 0.16);
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-source-trigger span {
+  color: #8f681a;
+}
+
+.admin-source-trigger strong {
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: #fff8df;
+  background: #3f4e38;
+  font-size: 11px;
+}
+
+.admin-source-trigger:hover,
+.admin-source-control.is-open .admin-source-trigger {
+  background: #fff7e6;
+}
+
+.admin-source-popover {
+  margin-top: 8px;
+  border: 1px solid rgba(67, 80, 58, 0.18);
+  border-radius: 14px;
+  padding: 12px;
+  background:
+    radial-gradient(circle at top left, rgba(243, 192, 77, 0.2), transparent 42%),
+    rgba(255, 250, 240, 0.98);
+  box-shadow: 0 18px 46px rgba(25, 34, 20, 0.22);
+  backdrop-filter: blur(14px);
+}
+
+.admin-source-popover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #31402c;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-source-popover__head button {
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: #6a4a13;
+  background: rgba(243, 192, 77, 0.34);
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-source-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.admin-source-options button,
+.admin-source-login button {
+  border: 1px solid rgba(67, 80, 58, 0.16);
+  border-radius: 10px;
+  padding: 9px 10px;
+  color: #3e4d35;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-source-options button.active,
+.admin-source-login button {
+  color: #fff8df;
+  background: #3f4e38;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.admin-source-options button:not(.active):hover,
+.admin-source-popover__head button:hover {
+  background: #fff3d5;
+}
+
+.admin-source-popover p,
+.admin-source-login p {
+  margin: 10px 0 0;
+  color: #6c765f;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.admin-source-login {
+  display: grid;
+  gap: 9px;
+}
+
+.admin-source-login label {
+  display: grid;
+  gap: 5px;
+  color: #68725f;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-source-login input {
+  width: 100%;
+  border: 1px solid rgba(67, 80, 58, 0.16);
+  border-radius: 10px;
+  padding: 9px 10px;
+  color: #31402c;
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
+.admin-source-login input:focus {
+  border-color: rgba(185, 137, 35, 0.55);
+  box-shadow: 0 0 0 3px rgba(243, 192, 77, 0.18);
+}
+
 @media (max-width: 1280px) {
   .map-series {
     grid-template-columns: 1fr;
@@ -1466,6 +1833,12 @@ onMounted(async () => {
 
   .update-item time {
     justify-self: start;
+  }
+
+  .map-card--default,
+  .map-card--sword,
+  .map-card--three-alliance {
+    display: none;
   }
 
 }

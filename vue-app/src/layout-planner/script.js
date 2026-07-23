@@ -126,6 +126,8 @@ let battlefieldConnectionLines = [];
 let selectedBattlefieldLineColor = 'blue';
 let markedHaloRafId = null;
 let threeAllianceBattlefieldMode = false;
+let pkBattleHitAreas = [];
+let activePkBattleEntityId = null;
 
 const BATTLEFIELD_LINE_COLORS = Object.freeze({
     blue: Object.freeze({
@@ -2099,6 +2101,171 @@ function drawMarkedEntityHalos(context, pX, pY, z) {
     });
 }
 
+function traceRoundedRect(context, x, y, width, height, radius) {
+    const safeRadius = Math.max(0, Math.min(radius, width / 2, height / 2));
+    context.beginPath();
+    context.moveTo(x + safeRadius, y);
+    context.lineTo(x + width - safeRadius, y);
+    context.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
+    context.lineTo(x + width, y + height - safeRadius);
+    context.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
+    context.lineTo(x + safeRadius, y + height);
+    context.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
+    context.lineTo(x, y + safeRadius);
+    context.quadraticCurveTo(x, y, x + safeRadius, y);
+    context.closePath();
+}
+
+function getMarkedBattleBarAnchor(entity, pX, pY, z) {
+    // Use the same center as the visible yellow halo. Some battlefield PNGs
+    // contain a large transparent canvas, so their natural aspect ratio is not
+    // a reliable way to locate the visible top of the building.
+    const haloCenter = getEntityConnectionScreen(entity, pX, pY, z);
+    const currentGridSize = baseGridSize * z;
+    return {
+        x: haloCenter.x,
+        y: haloCenter.y - Math.max(48, currentGridSize * 1.75),
+        width: Math.max(112, currentGridSize * 2.8)
+    };
+}
+
+function drawPkScoreBadge(context, x, y, radius, color, value) {
+    const gradient = context.createRadialGradient(x - radius * 0.28, y - radius * 0.32, radius * 0.12, x, y, radius);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(0.08, color);
+    gradient.addColorStop(1, color);
+    context.save();
+    context.shadowColor = color;
+    context.shadowBlur = radius * 0.85;
+    context.fillStyle = gradient;
+    context.strokeStyle = 'rgba(255,255,255,0.96)';
+    context.lineWidth = Math.max(2, radius * 0.16);
+    context.beginPath();
+    context.arc(x, y, radius, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+    context.fillStyle = '#ffffff';
+    context.shadowColor = 'rgba(0,0,0,0.65)';
+    context.shadowBlur = 3;
+    context.font = `900 ${Math.max(11, radius * 1.05)}px Arial`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(String(value), x, y + radius * 0.04);
+    context.restore();
+}
+
+function isCenterTideTempleEntity(entity) {
+    return entity?.imageKey === 'threeTideTemple' || String(entity?.name || '').includes('潮汐神殿');
+}
+
+function getPkBattleScores(entity) {
+    const centerTemple = isCenterTideTempleEntity(entity);
+    return {
+        leftScore: Math.max(0, Number(entity?.pkLeftScore ?? (centerTemple ? 12 : 3))),
+        rightScore: Math.max(0, Number(entity?.pkRightScore ?? (centerTemple ? 7 : 12)))
+    };
+}
+
+function getPkBattleBarMetrics(entity, pX = panX, pY = panY, z = zoom) {
+    const anchor = getMarkedBattleBarAnchor(entity, pX, pY, z);
+    const barWidth = Math.max(92, Math.min(168, anchor.width * 0.92));
+    const barHeight = Math.max(9, Math.min(14, 11 * z));
+    const badgeRadius = Math.max(13, Math.min(19, 15 * z));
+    const barX = anchor.x - barWidth / 2;
+    const barY = anchor.y - barHeight;
+    return {
+        anchor,
+        barWidth,
+        barHeight,
+        badgeRadius,
+        barX,
+        barY,
+        hitX: barX - badgeRadius * 1.9,
+        hitY: barY - badgeRadius * 2.7,
+        hitWidth: barWidth + badgeRadius * 3.8,
+        hitHeight: barHeight + badgeRadius * 4.2
+    };
+}
+
+function getPkBattleBarEntities() {
+    return entities.filter(entity => entity?.mainMark || isCenterTideTempleEntity(entity));
+}
+
+function drawMarkedEntityBattleBars(context, pX, pY, z) {
+    // Highlighted buildings use the normal 3:12 state. The center Tide Temple
+    // is also included, with its own high-score 12:7 state.
+    const battleBarEntities = getPkBattleBarEntities();
+    pkBattleHitAreas = [];
+    if (!battleBarEntities.length) return;
+
+    const now = performance.now();
+    battleBarEntities.forEach(entity => {
+        const metrics = getPkBattleBarMetrics(entity, pX, pY, z);
+        const { anchor, barWidth, barHeight, badgeRadius, barX, barY } = metrics;
+        const { leftScore, rightScore } = getPkBattleScores(entity);
+        const total = Math.max(1, leftScore + rightScore);
+        const leftRatio = leftScore / total;
+        const pulse = (Math.sin(now / 210) + 1) / 2;
+        const sparkAngle = now / 270;
+        const red = '#ef5146';
+        const blue = '#238bd2';
+        pkBattleHitAreas.push({ entity, ...metrics });
+
+        context.save();
+        context.globalAlpha = 0.96;
+        context.shadowColor = 'rgba(20,31,45,0.55)';
+        context.shadowBlur = 7;
+        traceRoundedRect(context, barX - 3, barY - 3, barWidth + 6, barHeight + 6, (barHeight + 6) / 2);
+        context.fillStyle = 'rgba(247,239,218,0.96)';
+        context.fill();
+        context.shadowBlur = 0;
+        traceRoundedRect(context, barX, barY, barWidth, barHeight, barHeight / 2);
+        context.save();
+        context.clip();
+        context.fillStyle = red;
+        context.fillRect(barX, barY, barWidth * leftRatio, barHeight);
+        context.fillStyle = blue;
+        context.fillRect(barX + barWidth * leftRatio, barY, barWidth * (1 - leftRatio), barHeight);
+        const shine = context.createLinearGradient(barX, barY, barX, barY + barHeight);
+        shine.addColorStop(0, 'rgba(255,255,255,0.68)');
+        shine.addColorStop(0.48, 'rgba(255,255,255,0.08)');
+        shine.addColorStop(1, 'rgba(0,0,0,0.2)');
+        context.fillStyle = shine;
+        context.fillRect(barX, barY, barWidth, barHeight);
+        context.restore();
+        context.strokeStyle = 'rgba(52,61,70,0.72)';
+        context.lineWidth = 1.5;
+        context.stroke();
+
+        drawPkScoreBadge(context, barX - badgeRadius * 0.48, barY + barHeight / 2, badgeRadius, red, leftScore);
+        drawPkScoreBadge(context, barX + barWidth + badgeRadius * 0.48, barY + barHeight / 2, badgeRadius, blue, rightScore);
+
+        const pkY = barY - badgeRadius * 1.18;
+        context.translate(anchor.x, pkY);
+        context.scale(0.94 + pulse * 0.13, 0.94 + pulse * 0.13);
+        context.shadowColor = pulse > 0.5 ? '#ffb526' : '#ff5f45';
+        context.shadowBlur = 10 + pulse * 13;
+        context.fillStyle = '#fff4b2';
+        context.strokeStyle = '#a92e28';
+        context.lineWidth = 3;
+        context.font = `italic 1000 ${Math.max(15, Math.min(24, 19 * z))}px Arial Black, Arial`;
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.strokeText('PK', 0, 0);
+        context.fillText('PK', 0, 0);
+        context.shadowBlur = 5;
+        context.fillStyle = '#ffd34d';
+        for (let index = 0; index < 4; index += 1) {
+            const angle = sparkAngle + index * Math.PI / 2;
+            const distance = badgeRadius * (1.05 + pulse * 0.28);
+            context.beginPath();
+            context.arc(Math.cos(angle) * distance, Math.sin(angle) * distance * 0.48, 1.5 + pulse, 0, Math.PI * 2);
+            context.fill();
+        }
+        context.restore();
+    });
+}
+
 function drawEntities(context, pX, pY, z) {
     const { protectedAreasByAlliance } = buildProtectedAreaSnapshot();
 
@@ -2118,6 +2285,9 @@ function drawEntities(context, pX, pY, z) {
         drawEntity(context, pX, pY, z, entity, protectedAreasByAlliance);
         
     });
+
+    // Draw after every entity so the score bars always stay above buildings.
+    drawMarkedEntityBattleBars(context, pX, pY, z);
     
     // Draw ghost preview if applicable
     if (ghostPreview) {
@@ -2576,6 +2746,7 @@ function drawFlagDetails(context, z, flag, screen) {
         accent: 'rgba(255, 230, 142, 0.92)',
         compact: true
     });
+
 }
 
 function drawHQDetails(context, z, hq, screen) {
@@ -3395,6 +3566,117 @@ function formatPowerValue(value) {
     return Math.round(n).toLocaleString('zh-CN');
 }
 
+function getPkBattleHitAtPoint(x, y) {
+    for (let index = pkBattleHitAreas.length - 1; index >= 0; index -= 1) {
+        const area = pkBattleHitAreas[index];
+        if (
+            x >= area.hitX &&
+            x <= area.hitX + area.hitWidth &&
+            y >= area.hitY &&
+            y <= area.hitY + area.hitHeight
+        ) {
+            return area;
+        }
+    }
+    return null;
+}
+
+function createPkBattleMockMembers(count, side, seedPower) {
+    const names = side === 'left'
+        ? ['守护者', '铁壁', '战盾', '北境', '苍甲', '壁垒']
+        : ['破阵', '锋刃', '疾风', '蓝焰', '突袭', '星火'];
+    return Array.from({ length: Math.max(0, count) }, (_, index) => {
+        const decay = Math.max(0.38, 1 - index * 0.045);
+        const power = Math.max(300000, Math.round(seedPower * decay));
+        return {
+            name: `${names[index % names.length]}${index + 1}`,
+            power,
+            soldiers: Math.max(80000, Math.round(power / 950))
+        };
+    });
+}
+
+function renderPkBattleMemberList(list, members) {
+    if (!list) return;
+    list.innerHTML = '';
+    members.forEach(member => {
+        const item = document.createElement('li');
+        const name = document.createElement('span');
+        const meta = document.createElement('em');
+        name.textContent = member.name;
+        meta.textContent = `${formatPowerValue(member.power)} · ${member.soldiers.toLocaleString('zh-CN')} 人`;
+        item.appendChild(name);
+        item.appendChild(meta);
+        list.appendChild(item);
+    });
+}
+
+function closePkBattleDetail() {
+    const panel = document.getElementById('pkBattleDetailPanel');
+    if (!panel) return;
+    panel.classList.add('hidden');
+    activePkBattleEntityId = null;
+}
+
+function openPkBattleDetail(area) {
+    if (!area?.entity) return false;
+    const panel = document.getElementById('pkBattleDetailPanel');
+    if (!panel) return false;
+
+    const entity = area.entity;
+    const { leftScore, rightScore } = getPkBattleScores(entity);
+    const leftSeedPower = isCenterTideTempleEntity(entity) ? 29000000 : 13500000;
+    const rightSeedPower = isCenterTideTempleEntity(entity) ? 23800000 : 18200000;
+    const leftPower = leftScore * leftSeedPower;
+    const rightPower = rightScore * rightSeedPower;
+    const totalPower = Math.max(1, leftPower + rightPower);
+    const leftRatio = Math.max(8, Math.min(92, (leftPower / totalPower) * 100));
+    const rightRatio = 100 - leftRatio;
+    const canManeuver = leftScore >= 5 && rightScore >= 5;
+    const statusHint = document.getElementById('pkBattleStatusHint');
+
+    document.getElementById('pkBattleDetailTitle').textContent = entity.name || '据点交战';
+    document.getElementById('pkBattleLeftCount').textContent = `${leftScore} 人`;
+    document.getElementById('pkBattleRightCount').textContent = `${rightScore} 人`;
+    document.getElementById('pkBattleLeftPower').textContent = formatPowerValue(leftPower);
+    document.getElementById('pkBattleRightPower').textContent = formatPowerValue(rightPower);
+    document.getElementById('pkBattleLeftBar').style.width = `${leftRatio}%`;
+    document.getElementById('pkBattleRightBar').style.width = `${rightRatio}%`;
+    const leftMembers = createPkBattleMockMembers(leftScore, 'left', leftSeedPower);
+    const rightMembers = createPkBattleMockMembers(rightScore, 'right', rightSeedPower);
+    document.getElementById('pkBattleLeftListTitle').textContent = `防守成员 ${leftMembers.length}/${leftScore}`;
+    document.getElementById('pkBattleRightListTitle').textContent = `进攻成员 ${rightMembers.length}/${rightScore}`;
+    renderPkBattleMemberList(document.getElementById('pkBattleLeftList'), leftMembers);
+    renderPkBattleMemberList(document.getElementById('pkBattleRightList'), rightMembers);
+    if (statusHint) {
+        statusHint.textContent = canManeuver ? '可突击、撤退' : '双方被卡死';
+        statusHint.classList.toggle('pk-battle-detail__hint--ready', canManeuver);
+        statusHint.classList.toggle('pk-battle-detail__hint--locked', !canManeuver);
+    }
+
+    const card = panel.querySelector('.pk-battle-detail__card');
+    const canvasRect = canvas.getBoundingClientRect();
+    const cardWidth = Math.min(430, Math.max(320, window.innerWidth - 24));
+    const left = Math.max(12, Math.min(window.innerWidth - cardWidth - 12, canvasRect.left + area.anchor.x - cardWidth / 2));
+    const top = Math.max(72, Math.min(window.innerHeight - 180, canvasRect.top + area.hitY - 18));
+    card.style.width = `${cardWidth}px`;
+    panel.style.left = `${left}px`;
+    panel.style.top = `${top}px`;
+    panel.classList.remove('hidden');
+    activePkBattleEntityId = entity.id || null;
+    return true;
+}
+
+function tryOpenPkBattleDetailAt(mouseX, mouseY) {
+    const area = getPkBattleHitAtPoint(mouseX, mouseY);
+    if (!area) {
+        const panel = document.getElementById('pkBattleDetailPanel');
+        if (panel && !panel.classList.contains('hidden')) closePkBattleDetail();
+        return false;
+    }
+    return openPkBattleDetail(area);
+}
+
 function normalizePowerRankingMember(raw, index) {
     const name = raw?.name ?? raw?.nickname ?? raw?.player ?? raw?.member ?? raw?.名称 ?? raw?.名字 ?? raw?.玩家 ?? `成员 ${index + 1}`;
     const power = normalizePowerValue(raw?.power ?? raw?.battlePower ?? raw?.score ?? raw?.战力 ?? raw?.实力 ?? raw?.积分);
@@ -3426,6 +3708,16 @@ function loadAllianceLeaders() {
     } catch {
         allianceLeaderNames = new Set();
     }
+}
+
+function saveAllianceLeadersFromMembers(members = powerRankingMembers) {
+    const leaderNames = extractPowerRankingMembers(members)
+        .slice(0, 10)
+        .map(member => String(member.name || '').trim())
+        .filter(Boolean);
+    localStorage.setItem(ALLIANCE_LEADERS_STORAGE_KEY, JSON.stringify(leaderNames));
+    allianceLeaderNames = new Set(leaderNames.map(normalizeMemberKey));
+    window.dispatchEvent(new CustomEvent('alliance-leaders-change', { detail: leaderNames }));
 }
 
 function isPowerMemberPlaced(memberName) {
@@ -3497,9 +3789,10 @@ function loadPowerRankingMembersFromStorage() {
     }
 }
 
-function setPowerRankingMembers(members, { persist = true, source = '本地成员库' } = {}) {
+function setPowerRankingMembers(members, { persist = true, source = '本地成员库', updateLeaders = false } = {}) {
     powerRankingMembers = extractPowerRankingMembers(members);
     if (persist) savePowerRankingMembersToStorage(powerRankingMembers);
+    if (updateLeaders) saveAllianceLeadersFromMembers(powerRankingMembers);
     renderFilteredPowerRankings();
     updateSwordRosterSummary();
     renderSwordRosterMemberList();
@@ -3528,6 +3821,15 @@ function loadAllianceDataSettings() {
 }
 
 function getAllianceRankingApiBase() {
+    if (localStorage.getItem('bbwg-ranking-source') === 'legacy') {
+        if (window.__BENBEN_LEGACY_RANKING_API_BASE__) {
+            return String(window.__BENBEN_LEGACY_RANKING_API_BASE__).replace(/\/$/, '');
+        }
+        if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+            return '//localhost:8081/legacy-ranking-api';
+        }
+        return '/legacy-ranking-api';
+    }
     if (window.__BENBEN_RANKING_API_BASE__) {
         return String(window.__BENBEN_RANKING_API_BASE__).replace(/\/$/, '');
     }
@@ -3535,6 +3837,33 @@ function getAllianceRankingApiBase() {
         return '//localhost:8081/ranking-api';
     }
     return '/ranking-api';
+}
+
+function collectLegacyAllianceMembers(payload, allianceId) {
+    const target = String(allianceId || '').trim().toLocaleLowerCase();
+    const members = new Map();
+    Object.values(payload?.rankings || {}).forEach(ranking => {
+        (ranking?.rows || []).forEach(row => {
+            if (row?.entity_type !== 'player') return;
+            const rowAllianceId = String(row.alliance_id ?? '').trim().toLocaleLowerCase();
+            const rowAllianceAbbr = String(row.alliance_abbr || '').trim().toLocaleLowerCase();
+            if (rowAllianceId !== target && rowAllianceAbbr !== target) return;
+            const uid = String(row.uid ?? row.key ?? '');
+            if (!uid) return;
+            const previous = members.get(uid) || {
+                uid,
+                name: String(row.name || `玩家 ${uid}`).trim(),
+                power: 0,
+                alliance: String(row.alliance_abbr || row.alliance_name || '').trim(),
+                role: ''
+            };
+            previous.power = Math.max(previous.power, Number(row.power || 0), Number(ranking.type) === 8 ? Number(row.score || 0) : 0);
+            members.set(uid, previous);
+        });
+    });
+    return [...members.values()]
+        .sort((a, b) => (b.power - a.power) || a.name.localeCompare(b.name, 'zh-CN'))
+        .map((member, index) => ({ ...member, rank: index + 1 }));
 }
 
 function collectRemoteAllianceMembers(players, allianceId) {
@@ -3555,6 +3884,16 @@ function collectRemoteAllianceMembers(players, allianceId) {
 async function fetchConfiguredAllianceMembers() {
     const settings = loadAllianceDataSettings();
     if (!settings) return null;
+    if (localStorage.getItem('bbwg-ranking-source') === 'legacy') {
+        const response = await fetch(`${getAllianceRankingApiBase()}/${Number(settings.serverId)}.json`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const members = collectLegacyAllianceMembers(await response.json(), settings.allianceId);
+        if (!members.length) throw new Error('旧版排行榜中没有找到已配置联盟的成员');
+        return {
+            members,
+            source: `${settings.serverId}区 ${settings.allianceAbbr ? `[${settings.allianceAbbr}] ` : ''}${settings.allianceName || '联盟'}（旧版）`
+        };
+    }
     const params = new URLSearchParams({
         mode: 'server',
         sort: 'hero_power',
@@ -4491,7 +4830,7 @@ function savePowerRankingEditor() {
             window.alert('没有解析到成员数据，请检查格式。');
             return;
         }
-        setPowerRankingMembers(members, { persist: true, source: '手动编辑' });
+        setPowerRankingMembers(members, { persist: true, source: '手动编辑', updateLeaders: true });
         closePowerRankingEditor();
     } catch (error) {
         console.warn('Failed to parse manual power rankings', error);
@@ -5057,7 +5396,7 @@ function installPowerRankingPanel() {
                     window.alert('没有解析到成员数据，请检查文件内容。');
                     return;
                 }
-                setPowerRankingMembers(members, { persist: true, source: file.name });
+                setPowerRankingMembers(members, { persist: true, source: file.name, updateLeaders: true });
             } catch (error) {
                 console.warn('Failed to import power ranking file', error);
                 window.alert('导入失败，请确认文件是 Excel、JSON、CSV 或文本格式。');
@@ -5124,6 +5463,21 @@ function installPowerRankingPanel() {
         });
     }
     loadPowerRankings();
+}
+
+function installPkBattleDetailPanel() {
+    const panel = document.getElementById('pkBattleDetailPanel');
+    const closeButton = document.getElementById('pkBattleDetailClose');
+    if (closeButton && closeButton.dataset.bound !== 'true') {
+        closeButton.dataset.bound = 'true';
+        closeButton.addEventListener('click', closePkBattleDetail);
+    }
+    if (panel && panel.dataset.bound !== 'true') {
+        panel.dataset.bound = 'true';
+        panel.addEventListener('click', event => {
+            if (event.target === panel) closePkBattleDetail();
+        });
+    }
 }
 
 window.addEventListener('alliance-leaders-change', () => {
@@ -5581,6 +5935,11 @@ function handleMouseDown(event) {
     }
 
     if (event.button !== 0) return; // Left mouse button only from here
+
+    if (tryOpenPkBattleDetailAt(mouseX, mouseY)) {
+        event.preventDefault();
+        return;
+    }
 
     if (selectedType === 'select') {
         handleSelectMouseDown(event, mouseX, mouseY);
@@ -6166,6 +6525,7 @@ window.addEventListener('DOMContentLoaded', () => {
     installThreeAllianceQuickBuilder();
     updateSelectedEntityEditor();
     installPowerRankingPanel();
+    installPkBattleDetailPanel();
 });
 
 window.addEventListener('alliance-members-change', event => {
@@ -9388,6 +9748,14 @@ function exportPlayerNamesCSV({ onlyNamed = false } = {}) {
     function handleCanvasClick(x, y, opts = {}) {
         const rect = canvas.getBoundingClientRect();
         const event = { clientX: x + rect.left, clientY: y + rect.top };
+
+        if (tryOpenPkBattleDetailAt(x, y)) {
+            if (opts.fromTouch) {
+                ghostPreview = null;
+                redraw();
+            }
+            return;
+        }
 
         if (selectedType === 'select') {
             selectEntity(event);

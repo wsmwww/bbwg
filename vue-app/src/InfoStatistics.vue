@@ -17,7 +17,7 @@
         <div class="map-preview-card__head">
           <span>MAP MODE</span>
           <strong>王城网格</strong>
-          <small>填写完成后，可进入王城网格布局，并把当前列表作为左侧可拖拽盟友数据。</small>
+          <small>填写完成后，可进入王城网格布局查看基础地图，不会覆盖地图模块的成员数据。</small>
         </div>
         <div class="castle-map" aria-label="王城网格">
           <i v-for="item in 225" :key="item"></i>
@@ -202,7 +202,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import * as XLSX from 'xlsx';
-import { POWER_RANKINGS_STORAGE_KEY } from './alliance-member-service';
 import {
   clearInfoRegistrations,
   createInfoRegistration,
@@ -349,32 +348,8 @@ async function resetRows() {
   }
 }
 
-function getPlannerMembers() {
-  return rows.value
-    .filter(row => String(row.name || '').trim())
-    .map((row, index) => ({
-      rank: index + 1,
-      name: String(row.name || '').trim(),
-      power: Number(row.troops || row.diamonds || 0),
-      uid: `info-${index + 1}-${String(row.name || '').trim()}`,
-      role: row.castleLevel ? `城堡 Lv.${row.castleLevel}` : '',
-      alliance: '信息统计',
-      onlineTime: row.onlineTime,
-      voice: row.voice,
-      diamonds: row.diamonds,
-      willingCost: row.willingCost,
-      preference: row.preference,
-      gordonDefenseLevel: row.gordonDefenseLevel,
-      qinkeRallyLevel: row.qinkeRallyLevel,
-      remark: row.remark
-    }));
-}
-
 async function openCastleLayout() {
   await saveRows();
-  const members = getPlannerMembers();
-  localStorage.setItem(POWER_RANKINGS_STORAGE_KEY, JSON.stringify(members));
-  window.dispatchEvent(new CustomEvent('alliance-members-change', { detail: { members } }));
   emit('open-castle-layout');
 }
 
@@ -984,6 +959,12 @@ textarea {
 
   .info-form-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .map-preview-card {
+    display: none;
   }
 }
 </style>
