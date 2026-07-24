@@ -1,0 +1,8 @@
+name = "bbwg"
+main = "worker.js"
+compatibility_date = "2026-07-24"
+
+# 绑定dist静态资源文件夹
+[[assets]]
+directory = "dist"
+binding = "ASSETS"
