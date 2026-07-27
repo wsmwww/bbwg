@@ -195,7 +195,8 @@
               </div>
               <div class="alliance-member-list__power">
                 <em v-if="member.rank <= 10">车头</em>
-                <span>{{ formatPower(member.power) }}</span>
+                <span><i>英雄</i>{{ formatPower(member.power) }}</span>
+                <span class="pet-power"><i>宠物</i>{{ formatPower(member.petPower || 0) }}</span>
               </div>
             </article>
           </div>
@@ -1550,10 +1551,33 @@ onMounted(async () => {
 }
 
 .alliance-member-list__power span {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
   color: #8a681f;
   font-size: 12px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
+}
+
+.alliance-member-list__power span i {
+  border-radius: 999px;
+  padding: 1px 5px;
+  color: rgba(47, 58, 42, 0.72);
+  background: rgba(239, 229, 209, 0.78);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 1000;
+}
+
+.alliance-member-list__power .pet-power {
+  color: #2878a8;
+}
+
+.alliance-member-list__power .pet-power i {
+  color: #17465e;
+  background: rgba(142, 216, 232, 0.45);
 }
 
 .leader-empty {

@@ -7,7 +7,7 @@ export const RANKING_SOURCES = {
   legacy: { id: 'legacy', label: '旧版接口（benbenkshen）' }
 };
 
-const RANKING_BATCH_ID = 10;
+const RANKING_BATCH_ID = 11;
 const RANKING_PAGE_SIZE = 50;
 
 export function getRankingSource() {
@@ -175,11 +175,12 @@ export function collectAllianceMembers(payload, allianceId) {
         const uid = String(row.uid ?? row.key ?? '');
         if (!uid) return;
         const previous = members.get(uid) || {
-          name: String(row.name || `玩家 ${uid}`).trim(), power: 0,
+          name: String(row.name || `玩家 ${uid}`).trim(), power: 0, petPower: 0,
           alliance: String(row.alliance_abbr || row.alliance_name || '').trim(), role: '', uid,
           zoneRank: Number(row.rank || 0), rankingTypes: []
         };
         previous.power = Math.max(previous.power, Number(row.power || 0), Number(ranking.type) === 8 ? Number(row.score || 0) : 0);
+        previous.petPower = Math.max(previous.petPower, Number(row.pet_power || 0), Number(ranking.type) === 16 ? Number(row.score || row.power || 0) : 0);
         previous.rankingTypes.push(Number(ranking.type));
         members.set(uid, previous);
       });
@@ -192,7 +193,7 @@ export function collectAllianceMembers(payload, allianceId) {
     .filter(player => String(player.alliance || '').trim().toLocaleLowerCase() === target)
     .sort((a, b) => Number(b.hero_power || 0) - Number(a.hero_power || 0))
     .map((player, index) => ({
-      rank: index + 1, name: String(player.nickname || `玩家 ${player.id}`).trim(), power: Number(player.hero_power || 0),
+      rank: index + 1, name: String(player.nickname || `玩家 ${player.id}`).trim(), power: Number(player.hero_power || 0), petPower: Number(player.pet_power || 0),
       alliance: String(player.alliance || '').trim(), role: player.secret_level ? `秘境 ${Number(player.secret_level)}` : '',
       uid: String(player.id), zoneRank: Number(player.seq_no || 0), rankingTypes: [8, 16, 20]
     }));

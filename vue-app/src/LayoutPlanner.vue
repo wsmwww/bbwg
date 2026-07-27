@@ -205,6 +205,7 @@
                         <button id="openSwordTaskDrawerButton" type="button">任务总览</button>
                         <button id="importSwordTaskPlanButton" type="button">导入安排</button>
                         <button id="exportSwordTaskPlanButton" type="button">导出安排</button>
+                        <button id="resetSwordPlanButton" type="button">重置安排</button>
                         <button id="addSwordTaskButton" type="button">新增任务</button>
                         <input id="swordTaskPlanFileInput" type="file" accept=".xlsx,.xls,.json,.csv,.txt" hidden />
                     </div>

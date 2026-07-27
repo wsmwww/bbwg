@@ -3900,7 +3900,7 @@ async function fetchConfiguredAllianceMembers() {
         order: 'desc',
         page: '1',
         size: '50',
-        batch_id: '10',
+        batch_id: '11',
         servers: String(settings.serverId),
         keyword: String(settings.allianceId)
     });
@@ -3972,7 +3972,9 @@ function getSwordTaskPriorityTier(task) {
 
 function loadSwordTasks() {
     try {
-        const raw = JSON.parse(localStorage.getItem(getSwordTasksStorageKey()) || '[]');
+        const stored = localStorage.getItem(getSwordTasksStorageKey());
+        if (stored === null) return null;
+        const raw = JSON.parse(stored || '[]');
         if (!Array.isArray(raw)) return [];
         return sortSwordTasksByPriority(raw.map(normalizeSwordTask));
     } catch {
@@ -3986,7 +3988,7 @@ function saveSwordTasks(tasks) {
 
 function getSwordTasks() {
     const tasks = loadSwordTasks();
-    if (tasks.length) return tasks;
+    if (Array.isArray(tasks)) return tasks;
     const defaults = [
         { id: 'task-attack-center', name: '进攻神剑祭坛', priority: 30, members: [] },
         { id: 'task-defend-center', name: '防守神剑祭坛', priority: 20, members: [] },
@@ -4222,6 +4224,21 @@ function updateSwordTaskPriority(taskId, priority) {
 
 function deleteSwordTask(taskId) {
     setSwordTasks(getSwordTasks().filter(task => task.id !== taskId));
+}
+
+function resetSwordPlan() {
+    const legionName = activeSwordLegion === 'legion1' ? '军团1' : '军团2';
+    if (!confirm(`确定重置${legionName}的神剑安排吗？地图上的派遣标签和普通任务都会清空。`)) return;
+    placedPowerMembers = placedPowerMembers.filter(item => item.cityPlacement);
+    localStorage.setItem(getSwordPlacementStorageKey(activeSwordLegion), JSON.stringify([]));
+    saveSwordTasks([]);
+    activeSwordAssignTaskId = null;
+    closeSwordAssignModal();
+    closeSwordTaskDrawer();
+    renderSwordTaskPanel();
+    renderFilteredPowerRankings();
+    redraw();
+    showShortcutToast(`已重置${legionName}神剑安排`);
 }
 
 function addMemberToSwordTask(taskId, memberName) {
@@ -4843,6 +4860,7 @@ function installSwordTaskPanel() {
     const drawerButton = document.getElementById('openSwordTaskDrawerButton');
     const importButton = document.getElementById('importSwordTaskPlanButton');
     const exportButton = document.getElementById('exportSwordTaskPlanButton');
+    const resetButton = document.getElementById('resetSwordPlanButton');
     const importInput = document.getElementById('swordTaskPlanFileInput');
     const input = document.getElementById('newSwordTaskNameInput');
     const rosterButton = document.getElementById('openSwordRosterButton');
@@ -4872,6 +4890,10 @@ function installSwordTaskPanel() {
     if (exportButton && exportButton.dataset.bound !== 'true') {
         exportButton.dataset.bound = 'true';
         exportButton.addEventListener('click', exportSwordTaskPlan);
+    }
+    if (resetButton && resetButton.dataset.bound !== 'true') {
+        resetButton.dataset.bound = 'true';
+        resetButton.addEventListener('click', resetSwordPlan);
     }
     if (importButton && importInput && importButton.dataset.bound !== 'true') {
         importButton.dataset.bound = 'true';
