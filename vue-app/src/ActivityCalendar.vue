@@ -105,7 +105,9 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 defineEmits(['back-to-series']);
 
-const API_BASE = 'https://t2s.awzh.cn/api/auth/activity-events';
+const API_BASE = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  ? '//localhost:8081/auth-api/activity-events'
+  : '/auth-api/activity-events';
 const today = new Date();
 const currentYear = ref(today.getFullYear());
 const currentMonth = ref(today.getMonth() + 1);

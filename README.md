@@ -92,6 +92,37 @@ https://benbenkshen.cn/data/1.json
 
 Netlify 部署通过根目录 `netlify.toml` 和构建产物 `_redirects` 配置代理规则。修改代理后需要重新部署。
 
+### t2s 接口签名密钥
+
+`t2s.awzh.cn` 当前接口需要服务端代理添加签名请求头：
+
+```text
+X-Sign-Time
+X-Sign-Nonce
+X-Sign
+```
+
+签名密钥不要提交到代码仓库。请在本地或部署平台配置环境变量：
+
+```text
+T2S_SIGN_SECRET=你的真实密钥
+```
+
+本地 PowerShell 示例：
+
+```powershell
+$env:T2S_SIGN_SECRET="你的真实密钥"
+npm run dev
+```
+
+线上部署时，在 Netlify 或 Cloudflare Pages 的环境变量中配置 `T2S_SIGN_SECRET`。
+
+Netlify 注意事项：
+
+- 不要只把 `dist` 文件夹手动拖到 Netlify，否则 `netlify/functions` 不会一起部署，`/ranking-api/*` 和 `/auth-api/*` 会 404。
+- 推荐使用 Git 连接 Netlify，让 Netlify 按根目录 `netlify.toml` 构建并发布。
+- 如果必须手动部署，需要使用 Netlify CLI 部署整个项目并包含 functions，而不是只上传静态 dist。
+
 ## 更新记录
 
 ### 2026-07-23 活动日历与 APP 端体验优化

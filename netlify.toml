@@ -1,6 +1,17 @@
+[build]
+  command = "cd vue-app && npm install && npm run build"
+  publish = "vue-app/dist"
+  functions = "netlify/functions"
+
 [[redirects]]
   from = "/ranking-api/*"
-  to = "https://t2s.awzh.cn/api/ranking/:splat"
+  to = "/.netlify/functions/ranking-api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/auth-api/*"
+  to = "/.netlify/functions/auth-api/:splat"
   status = 200
   force = true
 

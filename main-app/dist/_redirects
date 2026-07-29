@@ -1,2 +1,3 @@
-/ranking-api/*  https://t2s.awzh.cn/api/ranking/:splat  200!
+/ranking-api/*  /.netlify/functions/ranking-api/:splat  200!
+/auth-api/*  /.netlify/functions/auth-api/:splat  200!
 /legacy-ranking-api/*  https://benbenkshen.cn/data/:splat  200!
