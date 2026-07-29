@@ -3,6 +3,14 @@
   publish = "dist"
   functions = "netlify/functions"
 
+# SPA前端路由兜底（必须放在最下面！防止接口重定向被覆盖）
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true
+
+# 接口代理（放在SPA重定向上方）
 [[redirects]]
   from = "/ranking-api/*"
   to = "/.netlify/functions/ranking-api/:splat"
