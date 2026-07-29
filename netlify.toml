@@ -1,6 +1,6 @@
 [build]
-  command = "cd vue-app && npm install && npm run build"
-  publish = "vue-app/dist"
+  command = "npm install && npm run build"
+  publish = "dist"
   functions = "netlify/functions"
 
 [[redirects]]
