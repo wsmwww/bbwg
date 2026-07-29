@@ -1,30 +1,29 @@
 [build]
-  command = "npm install && npx webpack --mode production"
-  publish = "dist"
-  functions = "netlify/functions"
-
-# SPA前端路由兜底（必须放在最下面！防止接口重定向被覆盖）
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = true
-
-# 接口代理（放在SPA重定向上方）
-[[redirects]]
-  from = "/ranking-api/*"
-  to = "/.netlify/functions/ranking-api/:splat"
-  status = 200
-  force = true
+# 不设置base，和页面配置保持一致
+publish = "vue-app/dist"
+functions = "netlify/functions"
+command = "cd vue-app && npm install && npx webpack --mode production"
 
 [[redirects]]
-  from = "/auth-api/*"
-  to = "/.netlify/functions/auth-api/:splat"
-  status = 200
-  force = true
+from = "/ranking-api/*"
+to = "/.netlify/functions/ranking-api/:splat"
+status = 200
+force = true
 
 [[redirects]]
-  from = "/legacy-ranking-api/*"
-  to = "https://benbenkshen.cn/data/:splat"
-  status = 200
-  force = true
+from = "/auth-api/*"
+to = "/.netlify/functions/auth-api/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/legacy-ranking-api/*"
+to = "https://benbenkshen.cn/data/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+force = true
