@@ -1,4 +1,4 @@
-﻿// ===== DOM ELEMENTS =====
+// ===== DOM ELEMENTS =====
 const canvas = document.getElementById('layoutCanvas');
 const ctx = canvas.getContext('2d');
 const toolbar = document.getElementById('toolbar');
@@ -128,6 +128,12 @@ let markedHaloRafId = null;
 let threeAllianceBattlefieldMode = false;
 let pkBattleHitAreas = [];
 let activePkBattleEntityId = null;
+
+const THREE_ALLIANCE_ROSTER_STORAGE_PREFIX = 'benben-three-alliance-roster';
+const THREE_ALLIANCE_GROUPS_STORAGE_PREFIX = 'benben-three-alliance-groups';
+const THREE_ALLIANCE_ACTIVE_LEGION_STORAGE_KEY = 'benben-three-alliance-active-legion';
+let activeThreeAllianceLegion = localStorage.getItem(THREE_ALLIANCE_ACTIVE_LEGION_STORAGE_KEY) === 'legion2' ? 'legion2' : 'legion1';
+let activeTAAssignGroupId = null;
 
 const BATTLEFIELD_LINE_COLORS = Object.freeze({
     blue: Object.freeze({
@@ -1108,6 +1114,9 @@ function setThreeAllianceBattlefieldMode(active) {
         if (!['select', 'move', 'delete'].includes(selectedType)) {
             setSelectedTool('select');
         }
+        updateThreeAllianceLegionButtons();
+        updateThreeAllianceRosterSummary();
+        renderTAGroupPanel();
     }
 }
 
@@ -4122,6 +4131,575 @@ function clearSwordRoster() {
     setSwordRoster([]);
 }
 
+// ===== 三盟争霸分组（自定义分组 + 军团隔离 + 互斥分配） =====
+
+function getTARosterStorageKey(legionId = activeThreeAllianceLegion) {
+    return `${THREE_ALLIANCE_ROSTER_STORAGE_PREFIX}-${legionId}`;
+}
+
+function getTAGroupsStorageKey(legionId = activeThreeAllianceLegion) {
+    return `${THREE_ALLIANCE_GROUPS_STORAGE_PREFIX}-${legionId}`;
+}
+
+function getThreeAllianceRoster(legionId = activeThreeAllianceLegion) {
+    try {
+        const raw = JSON.parse(localStorage.getItem(getTARosterStorageKey(legionId)) || '[]');
+        return Array.isArray(raw)
+            ? Array.from(new Set(raw.map(name => String(name || '').trim()).filter(Boolean)))
+            : [];
+    } catch {
+        return [];
+    }
+}
+
+function setThreeAllianceRoster(names, legionId = activeThreeAllianceLegion) {
+    const unique = Array.from(new Set(names.map(name => String(name || '').trim()).filter(Boolean)));
+    localStorage.setItem(getTARosterStorageKey(legionId), JSON.stringify(unique));
+    // 报名池缩小后，同步清除不在报名池中的分组成员
+    const rosterSet = new Set(unique);
+    const groups = getThreeAllianceGroups(legionId);
+    let changed = false;
+    groups.forEach(group => {
+        const filtered = group.members.filter(name => rosterSet.has(name));
+        if (filtered.length !== group.members.length) {
+            group.members = filtered;
+            changed = true;
+        }
+    });
+    if (changed) saveThreeAllianceGroups(groups, legionId);
+    updateThreeAllianceRosterSummary();
+    renderTAGroupPanel();
+    renderThreeAllianceRosterMemberList();
+    if (activeTAAssignGroupId) renderTAAssignMemberList();
+}
+
+function getThreeAllianceGroups(legionId = activeThreeAllianceLegion) {
+    try {
+        const raw = JSON.parse(localStorage.getItem(getTAGroupsStorageKey(legionId)) || '[]');
+        if (!Array.isArray(raw)) return getDefaultTAGroups();
+        return raw.map(group => ({
+            id: String(group.id || `group-${Date.now()}-${Math.random()}`),
+            name: String(group.name || '未命名分组').trim() || '未命名分组',
+            members: Array.isArray(group.members)
+                ? Array.from(new Set(group.members.map(n => String(n || '').trim()).filter(Boolean)))
+                : []
+        }));
+    } catch {
+        return getDefaultTAGroups();
+    }
+}
+
+function getDefaultTAGroups() {
+    return [
+        { id: 'group-attack', name: '攻坚组', members: [] },
+        { id: 'group-defense', name: '防守组', members: [] },
+        { id: 'group-support', name: '支援组', members: [] }
+    ];
+}
+
+function saveThreeAllianceGroups(groups, legionId = activeThreeAllianceLegion) {
+    localStorage.setItem(getTAGroupsStorageKey(legionId), JSON.stringify(groups));
+}
+
+function setThreeAllianceGroups(groups) {
+    saveThreeAllianceGroups(groups);
+    renderTAGroupPanel();
+}
+
+function addTAGroup() {
+    const input = document.getElementById('newTAGroupNameInput');
+    const name = String(input?.value || '').trim() || `分组 ${getThreeAllianceGroups().length + 1}`;
+    const groups = getThreeAllianceGroups();
+    groups.push({ id: `group-${Date.now()}`, name, members: [] });
+    if (input) input.value = '';
+    setThreeAllianceGroups(groups);
+}
+
+function updateTAGroupName(groupId, name) {
+    const groups = getThreeAllianceGroups();
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return;
+    group.name = String(name || '').trim() || '未命名分组';
+    setThreeAllianceGroups(groups);
+}
+
+function deleteTAGroup(groupId) {
+    setThreeAllianceGroups(getThreeAllianceGroups().filter(g => g.id !== groupId));
+    if (activeTAAssignGroupId === groupId) {
+        activeTAAssignGroupId = null;
+        closeThreeAllianceGroupModal();
+    }
+}
+
+function resetTAGroups() {
+    const legionName = activeThreeAllianceLegion === 'legion1' ? '军团1' : '军团2';
+    if (!confirm(`确定重置${legionName}的所有分组吗？分组名称和人员都会清空并恢复默认。`)) return;
+    saveThreeAllianceGroups(getDefaultTAGroups());
+    activeTAAssignGroupId = null;
+    closeThreeAllianceGroupModal();
+    closeTAGroupDrawer();
+    renderTAGroupPanel();
+    showShortcutToast(`已重置${legionName}分组`);
+}
+
+// 互斥分配：将成员加入某组时，先从其他组移除
+function addMemberToTAGroup(groupId, memberName) {
+    const name = String(memberName || '').trim();
+    if (!name) return;
+    const rosterSet = new Set(getThreeAllianceRoster());
+    if (!rosterSet.has(name)) return;
+    const groups = getThreeAllianceGroups();
+    // 先从所有其他组移除该成员
+    groups.forEach(g => {
+        if (g.id !== groupId) {
+            g.members = g.members.filter(n => n !== name);
+        }
+    });
+    // 加入目标组
+    const target = groups.find(g => g.id === groupId);
+    if (target && !target.members.includes(name)) {
+        target.members.push(name);
+    }
+    saveThreeAllianceGroups(groups);
+    renderTAGroupPanel();
+    if (activeTAAssignGroupId) renderTAAssignMemberList();
+}
+
+function removeMemberFromTAGroup(groupId, memberName) {
+    const groups = getThreeAllianceGroups();
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return;
+    group.members = group.members.filter(n => n !== memberName);
+    saveThreeAllianceGroups(groups);
+    renderTAGroupPanel();
+    if (activeTAAssignGroupId) renderTAAssignMemberList();
+}
+
+// 查询某成员当前所在分组名称
+function getMemberTAGroupName(memberName, excludeGroupId) {
+    const groups = getThreeAllianceGroups();
+    for (const group of groups) {
+        if (group.id === excludeGroupId) continue;
+        if (group.members.includes(memberName)) return group.name;
+    }
+    return '';
+}
+
+function getThreeAllianceLegionLabel(legionId = activeThreeAllianceLegion) {
+    return legionId === 'legion1' ? '军团1' : '军团2';
+}
+
+function updateThreeAllianceLegionButtons() {
+    document.querySelectorAll('[data-ta-legion]').forEach(button => {
+        const active = button.dataset.taLegion === activeThreeAllianceLegion;
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+}
+
+function switchThreeAllianceLegion(legionId) {
+    const normalized = legionId === 'legion2' ? 'legion2' : 'legion1';
+    if (normalized === activeThreeAllianceLegion) return;
+    activeThreeAllianceLegion = normalized;
+    localStorage.setItem(THREE_ALLIANCE_ACTIVE_LEGION_STORAGE_KEY, activeThreeAllianceLegion);
+    activeTAAssignGroupId = null;
+    closeThreeAllianceGroupModal();
+    closeThreeAllianceRosterModal();
+    updateThreeAllianceLegionButtons();
+    updateThreeAllianceRosterSummary();
+    renderTAGroupPanel();
+    showShortcutToast(`已切换：${getThreeAllianceLegionLabel()}`);
+}
+
+function updateThreeAllianceRosterSummary() {
+    const count = document.getElementById('taRosterCount');
+    if (count) {
+        count.textContent = `${getThreeAllianceLegionLabel()} 报名 ${getThreeAllianceRoster().length} 人`;
+    }
+}
+
+// ===== 报名弹窗 =====
+
+function getFilteredTARosterMembers() {
+    const keyword = String(document.getElementById('taRosterSearchInput')?.value || '').trim().toLowerCase();
+    return powerRankingMembers.filter(member => {
+        if (!keyword) return true;
+        return String(member.name || '').toLowerCase().includes(keyword);
+    });
+}
+
+function openThreeAllianceRosterModal() {
+    const search = document.getElementById('taRosterSearchInput');
+    if (search) search.value = '';
+    document.getElementById('threeAllianceRosterModal')?.classList.remove('hidden');
+    renderThreeAllianceRosterMemberList();
+    search?.focus();
+}
+
+function closeThreeAllianceRosterModal() {
+    document.getElementById('threeAllianceRosterModal')?.classList.add('hidden');
+}
+
+function renderThreeAllianceRosterMemberList() {
+    const list = document.getElementById('taRosterMemberList');
+    if (!list) return;
+    list.innerHTML = '';
+    const roster = new Set(getThreeAllianceRoster());
+    const members = getFilteredTARosterMembers();
+    if (!members.length) {
+        const empty = document.createElement('p');
+        empty.className = 'sword-task-empty';
+        empty.textContent = powerRankingMembers.length ? '没有匹配的成员' : '请先导入联盟成员数据';
+        list.appendChild(empty);
+        return;
+    }
+    members.forEach(member => {
+        const checked = roster.has(member.name);
+        const row = document.createElement('label');
+        row.className = 'sword-assign-member';
+        row.classList.toggle('is-selected', checked);
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = checked;
+        checkbox.addEventListener('change', () => {
+            const next = new Set(getThreeAllianceRoster());
+            if (checkbox.checked) next.add(member.name);
+            else next.delete(member.name);
+            setThreeAllianceRoster(Array.from(next));
+        });
+        const body = document.createElement('span');
+        body.className = 'sword-assign-member__body';
+        const name = document.createElement('strong');
+        name.textContent = member.name;
+        const meta = document.createElement('em');
+        meta.textContent = `${formatPowerValue(member.power)}${member.alliance ? ` · ${member.alliance}` : ''}${member.role ? ` · ${member.role}` : ''}`;
+        body.appendChild(name);
+        body.appendChild(meta);
+        row.appendChild(checkbox);
+        row.appendChild(body);
+        list.appendChild(row);
+    });
+}
+
+function selectFilteredTARoster() {
+    const next = new Set(getThreeAllianceRoster());
+    getFilteredTARosterMembers().forEach(member => next.add(member.name));
+    setThreeAllianceRoster(Array.from(next));
+}
+
+function clearTARoster() {
+    if (!confirm(`确定清空${getThreeAllianceLegionLabel()}的报名人员吗？所有分组也会一并清空。`)) return;
+    setThreeAllianceRoster([]);
+    const groups = getThreeAllianceGroups();
+    groups.forEach(g => { g.members = []; });
+    saveThreeAllianceGroups(groups);
+    renderTAGroupPanel();
+}
+
+// ===== 分组列表渲染 =====
+
+function renderTAGroupPanel() {
+    const list = document.getElementById('taGroupList');
+    if (!list) return;
+    list.innerHTML = '';
+    const groups = getThreeAllianceGroups();
+    const roster = getThreeAllianceRoster();
+    const assignedSet = new Set();
+    groups.forEach(g => g.members.forEach(n => assignedSet.add(n)));
+
+    groups.forEach(group => {
+        const item = document.createElement('article');
+        item.className = 'ta-group-item';
+
+        const titleRow = document.createElement('div');
+        titleRow.className = 'ta-group-title-row';
+
+        const nameInput = document.createElement('input');
+        nameInput.className = 'ta-group-name';
+        nameInput.value = group.name;
+        nameInput.maxLength = 24;
+        nameInput.addEventListener('change', () => updateTAGroupName(group.id, nameInput.value));
+
+        const countBadge = document.createElement('span');
+        countBadge.className = 'ta-group-count';
+        countBadge.textContent = `${group.members.length} 人`;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'ta-group-delete';
+        deleteButton.textContent = '删';
+        deleteButton.title = '删除分组';
+        deleteButton.addEventListener('click', () => deleteTAGroup(group.id));
+
+        titleRow.appendChild(nameInput);
+        titleRow.appendChild(countBadge);
+        titleRow.appendChild(deleteButton);
+
+        const members = document.createElement('div');
+        members.className = 'ta-group-members';
+        if (group.members.length) {
+            group.members.forEach(memberName => {
+                const chip = document.createElement('span');
+                chip.className = 'sword-task-member';
+                chip.append(document.createTextNode(memberName));
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.textContent = '×';
+                remove.title = '移除成员';
+                remove.addEventListener('click', () => removeMemberFromTAGroup(group.id, memberName));
+                chip.appendChild(remove);
+                members.appendChild(chip);
+            });
+        } else {
+            const empty = document.createElement('p');
+            empty.className = 'sword-task-empty';
+            empty.textContent = '还没有分配人员';
+            members.appendChild(empty);
+        }
+
+        const assignButton = document.createElement('button');
+        assignButton.type = 'button';
+        assignButton.className = 'ta-group-assign-button';
+        assignButton.textContent = '分配人员';
+        assignButton.addEventListener('click', () => openTAAssignModal(group.id));
+
+        item.appendChild(titleRow);
+        item.appendChild(members);
+        item.appendChild(assignButton);
+        list.appendChild(item);
+    });
+
+    // 底部统计
+    const summary = document.getElementById('taGroupSummary');
+    if (summary) {
+        const unassigned = roster.length - assignedSet.size;
+        summary.textContent = `已报名 ${roster.length} 人 · 已分组 ${assignedSet.size} 人 · 未分组 ${unassigned} 人`;
+    }
+}
+
+// ===== 分配弹窗（互斥） =====
+
+function getFilteredTAAssignMembers() {
+    const keyword = String(document.getElementById('taGroupSearchInput')?.value || '').trim().toLowerCase();
+    const roster = getThreeAllianceRoster();
+    return powerRankingMembers
+        .filter(member => roster.includes(member.name))
+        .filter(member => {
+            if (!keyword) return true;
+            return String(member.name || '').toLowerCase().includes(keyword);
+        });
+}
+
+function openTAAssignModal(groupId) {
+    activeTAAssignGroupId = groupId;
+    const group = getThreeAllianceGroups().find(g => g.id === groupId);
+    const title = document.getElementById('taGroupTitle');
+    const search = document.getElementById('taGroupSearchInput');
+    if (title) title.textContent = `${group ? group.name : '分组'}人员分配`;
+    if (search) search.value = '';
+    document.getElementById('threeAllianceGroupModal')?.classList.remove('hidden');
+    renderTAAssignMemberList();
+    search?.focus();
+}
+
+function closeThreeAllianceGroupModal() {
+    document.getElementById('threeAllianceGroupModal')?.classList.add('hidden');
+    activeTAAssignGroupId = null;
+}
+
+function renderTAAssignMemberList() {
+    const list = document.getElementById('taGroupMemberList');
+    if (!list || !activeTAAssignGroupId) return;
+    list.innerHTML = '';
+    const roster = getThreeAllianceRoster();
+    if (!roster.length) {
+        const empty = document.createElement('p');
+        empty.className = 'sword-task-empty';
+        empty.textContent = '请先点击"参战报名"选择参战盟友';
+        list.appendChild(empty);
+        return;
+    }
+    const group = getThreeAllianceGroups().find(g => g.id === activeTAAssignGroupId);
+    const groupMembers = new Set(group ? group.members : []);
+    const members = getFilteredTAAssignMembers();
+    if (!members.length) {
+        const empty = document.createElement('p');
+        empty.className = 'sword-task-empty';
+        empty.textContent = '没有匹配的成员';
+        list.appendChild(empty);
+        return;
+    }
+    members.forEach(member => {
+        const checked = groupMembers.has(member.name);
+        const otherGroup = getMemberTAGroupName(member.name, activeTAAssignGroupId);
+        const row = document.createElement('label');
+        row.className = 'sword-assign-member';
+        row.classList.toggle('is-selected', checked);
+        if (otherGroup && !checked) row.classList.add('is-assigned-elsewhere');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = checked;
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                addMemberToTAGroup(activeTAAssignGroupId, member.name);
+            } else {
+                removeMemberFromTAGroup(activeTAAssignGroupId, member.name);
+            }
+            renderTAAssignMemberList();
+        });
+        const body = document.createElement('span');
+        body.className = 'sword-assign-member__body';
+        const name = document.createElement('strong');
+        name.textContent = member.name;
+        const metaParts = [formatPowerValue(member.power)];
+        if (member.alliance) metaParts.push(member.alliance);
+        if (member.role) metaParts.push(member.role);
+        if (otherGroup && !checked) {
+            metaParts.push(`已分：${otherGroup}`);
+        } else if (checked) {
+            metaParts.push('本组');
+        } else {
+            metaParts.push('未分组');
+        }
+        const meta = document.createElement('em');
+        meta.textContent = metaParts.join(' · ');
+        body.appendChild(name);
+        body.appendChild(meta);
+        row.appendChild(checkbox);
+        row.appendChild(body);
+        list.appendChild(row);
+    });
+}
+
+function selectFilteredTAAssign() {
+    if (!activeTAAssignGroupId) return;
+    getFilteredTAAssignMembers().forEach(member => {
+        addMemberToTAGroup(activeTAAssignGroupId, member.name);
+    });
+    renderTAAssignMemberList();
+}
+
+function clearTAGroup() {
+    if (!activeTAAssignGroupId) return;
+    const group = getThreeAllianceGroups().find(g => g.id === activeTAAssignGroupId);
+    if (!group) return;
+    if (!confirm(`确定清空"${group.name}"的人员吗？`)) return;
+    group.members = [];
+    saveThreeAllianceGroups(getThreeAllianceGroups());
+    renderTAGroupPanel();
+    renderTAAssignMemberList();
+}
+
+// ===== 分组总览弹窗 =====
+
+function openTAGroupDrawer() {
+    document.getElementById('threeAllianceGroupDrawerModal')?.classList.remove('hidden');
+    renderTAGroupDrawer();
+}
+
+function closeTAGroupDrawer() {
+    document.getElementById('threeAllianceGroupDrawerModal')?.classList.add('hidden');
+}
+
+function getTAGroupCardColorClass(groupName) {
+    const name = String(groupName || '').toLowerCase();
+    if (name.includes('攻')) return 'ta-group-card--attack';
+    if (name.includes('防')) return 'ta-group-card--defense';
+    if (name.includes('支')) return 'ta-group-card--support';
+    return '';
+}
+
+function renderTAGroupDrawer() {
+    const list = document.getElementById('taGroupDrawerList');
+    if (!list) return;
+    list.innerHTML = '';
+    const groups = getThreeAllianceGroups();
+    const roster = getThreeAllianceRoster();
+    const legionName = getThreeAllianceLegionLabel();
+
+    // 成员视图
+    const memberMap = new Map();
+    roster.forEach(name => memberMap.set(name, ''));
+    groups.forEach(group => {
+        group.members.forEach(name => {
+            memberMap.set(name, group.name);
+        });
+    });
+
+    const memberSection = document.createElement('section');
+    memberSection.className = 'sword-task-drawer-section sword-task-drawer-section--wide';
+    const memberTitle = document.createElement('h3');
+    memberTitle.textContent = `${legionName} · 成员分组视图`;
+    memberSection.appendChild(memberTitle);
+
+    if (memberMap.size) {
+        const memberGrid = document.createElement('div');
+        memberGrid.className = 'sword-member-task-grid';
+        Array.from(memberMap.entries())
+            .sort((a, b) => a[0].localeCompare(b[0], 'zh-CN'))
+            .forEach(([memberName, groupName]) => {
+                const row = document.createElement('div');
+                row.className = 'sword-member-task-row';
+                const name = document.createElement('strong');
+                name.textContent = memberName;
+                const groupText = document.createElement('span');
+                groupText.textContent = groupName || '未分组';
+                if (!groupName) groupText.style.color = 'rgba(150,150,150,0.7)';
+                row.appendChild(name);
+                row.appendChild(groupText);
+                memberGrid.appendChild(row);
+            });
+        memberSection.appendChild(memberGrid);
+    } else {
+        const empty = document.createElement('p');
+        empty.className = 'sword-task-empty';
+        empty.textContent = '暂无报名成员';
+        memberSection.appendChild(empty);
+    }
+    list.appendChild(memberSection);
+
+    // 分组视图
+    const groupSection = document.createElement('section');
+    groupSection.className = 'sword-task-drawer-section sword-task-drawer-section--wide';
+    const groupTitle = document.createElement('h3');
+    groupTitle.textContent = `${legionName} · 分组人员视图`;
+    groupSection.appendChild(groupTitle);
+    const groupGrid = document.createElement('div');
+    groupGrid.className = 'sword-task-drawer-grid';
+    groups.forEach(group => {
+        const card = document.createElement('article');
+        const colorClass = getTAGroupCardColorClass(group.name);
+        card.className = `ta-group-card ${colorClass}`;
+        const title = document.createElement('div');
+        title.className = 'ta-group-card-title';
+        const name = document.createElement('strong');
+        name.textContent = group.name;
+        const count = document.createElement('em');
+        count.textContent = `${group.members.length} 人`;
+        title.appendChild(name);
+        title.appendChild(count);
+        const members = document.createElement('div');
+        members.className = 'sword-task-members';
+        if (group.members.length) {
+            group.members.forEach(memberName => {
+                const chip = document.createElement('span');
+                chip.className = 'sword-task-member';
+                chip.textContent = memberName;
+                members.appendChild(chip);
+            });
+        } else {
+            const empty = document.createElement('p');
+            empty.className = 'sword-task-empty';
+            empty.textContent = '暂无成员';
+            members.appendChild(empty);
+        }
+        card.appendChild(title);
+        card.appendChild(members);
+        groupGrid.appendChild(card);
+    });
+    groupSection.appendChild(groupGrid);
+    list.appendChild(groupSection);
+}
+
 function saveSwordPlacementsForLegion(legionId = activeSwordLegion) {
     const data = placedPowerMembers
         .filter(item => !item.cityPlacement && item.targetEntity && entities.includes(item.targetEntity))
@@ -4976,6 +5554,114 @@ function installSwordTaskPanel() {
     updateSwordRosterSummary();
 }
 
+function installThreeAllianceGroupPanel() {
+    const rosterButton = document.getElementById('openTARosterButton');
+    const rosterModal = document.getElementById('threeAllianceRosterModal');
+    const rosterCloseButton = document.getElementById('closeTARosterModalButton');
+    const rosterSearch = document.getElementById('taRosterSearchInput');
+    const selectFilteredRosterButton = document.getElementById('selectFilteredTARosterButton');
+    const clearRosterButton = document.getElementById('clearTARosterButton');
+    const addButton = document.getElementById('addTAGroupButton');
+    const drawerButton = document.getElementById('openTAGroupDrawerButton');
+    const resetButton = document.getElementById('resetTAGroupsButton');
+    const newGroupInput = document.getElementById('newTAGroupNameInput');
+    const groupModal = document.getElementById('threeAllianceGroupModal');
+    const groupCloseButton = document.getElementById('closeTAGroupModalButton');
+    const groupSearch = document.getElementById('taGroupSearchInput');
+    const selectFilteredAssignButton = document.getElementById('selectFilteredTAGroupButton');
+    const clearGroupButton = document.getElementById('clearTAGroupButton');
+    const drawerModal = document.getElementById('threeAllianceGroupDrawerModal');
+    const closeDrawerButton = document.getElementById('closeTAGroupDrawerButton');
+
+    document.querySelectorAll('[data-ta-legion]').forEach(button => {
+        if (button.dataset.bound === 'true') return;
+        button.dataset.bound = 'true';
+        button.addEventListener('click', () => switchThreeAllianceLegion(button.dataset.taLegion));
+    });
+    if (rosterButton && rosterButton.dataset.bound !== 'true') {
+        rosterButton.dataset.bound = 'true';
+        rosterButton.addEventListener('click', openThreeAllianceRosterModal);
+    }
+    if (rosterCloseButton && rosterCloseButton.dataset.bound !== 'true') {
+        rosterCloseButton.dataset.bound = 'true';
+        rosterCloseButton.addEventListener('click', closeThreeAllianceRosterModal);
+    }
+    if (rosterSearch && rosterSearch.dataset.bound !== 'true') {
+        rosterSearch.dataset.bound = 'true';
+        rosterSearch.addEventListener('input', renderThreeAllianceRosterMemberList);
+    }
+    if (selectFilteredRosterButton && selectFilteredRosterButton.dataset.bound !== 'true') {
+        selectFilteredRosterButton.dataset.bound = 'true';
+        selectFilteredRosterButton.addEventListener('click', selectFilteredTARoster);
+    }
+    if (clearRosterButton && clearRosterButton.dataset.bound !== 'true') {
+        clearRosterButton.dataset.bound = 'true';
+        clearRosterButton.addEventListener('click', clearTARoster);
+    }
+    if (rosterModal && rosterModal.dataset.bound !== 'true') {
+        rosterModal.dataset.bound = 'true';
+        rosterModal.addEventListener('click', event => {
+            if (event.target === rosterModal) closeThreeAllianceRosterModal();
+        });
+    }
+    if (addButton && addButton.dataset.bound !== 'true') {
+        addButton.dataset.bound = 'true';
+        addButton.addEventListener('click', addTAGroup);
+    }
+    if (drawerButton && drawerButton.dataset.bound !== 'true') {
+        drawerButton.dataset.bound = 'true';
+        drawerButton.addEventListener('click', openTAGroupDrawer);
+    }
+    if (resetButton && resetButton.dataset.bound !== 'true') {
+        resetButton.dataset.bound = 'true';
+        resetButton.addEventListener('click', resetTAGroups);
+    }
+    if (newGroupInput && newGroupInput.dataset.bound !== 'true') {
+        newGroupInput.dataset.bound = 'true';
+        newGroupInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addTAGroup();
+            }
+        });
+    }
+    if (groupCloseButton && groupCloseButton.dataset.bound !== 'true') {
+        groupCloseButton.dataset.bound = 'true';
+        groupCloseButton.addEventListener('click', closeThreeAllianceGroupModal);
+    }
+    if (groupSearch && groupSearch.dataset.bound !== 'true') {
+        groupSearch.dataset.bound = 'true';
+        groupSearch.addEventListener('input', renderTAAssignMemberList);
+    }
+    if (selectFilteredAssignButton && selectFilteredAssignButton.dataset.bound !== 'true') {
+        selectFilteredAssignButton.dataset.bound = 'true';
+        selectFilteredAssignButton.addEventListener('click', selectFilteredTAAssign);
+    }
+    if (clearGroupButton && clearGroupButton.dataset.bound !== 'true') {
+        clearGroupButton.dataset.bound = 'true';
+        clearGroupButton.addEventListener('click', clearTAGroup);
+    }
+    if (groupModal && groupModal.dataset.bound !== 'true') {
+        groupModal.dataset.bound = 'true';
+        groupModal.addEventListener('click', event => {
+            if (event.target === groupModal) closeThreeAllianceGroupModal();
+        });
+    }
+    if (closeDrawerButton && closeDrawerButton.dataset.bound !== 'true') {
+        closeDrawerButton.dataset.bound = 'true';
+        closeDrawerButton.addEventListener('click', closeTAGroupDrawer);
+    }
+    if (drawerModal && drawerModal.dataset.bound !== 'true') {
+        drawerModal.dataset.bound = 'true';
+        drawerModal.addEventListener('click', event => {
+            if (event.target === drawerModal) closeTAGroupDrawer();
+        });
+    }
+    updateThreeAllianceLegionButtons();
+    updateThreeAllianceRosterSummary();
+    renderTAGroupPanel();
+}
+
 function getPowerRankingFilterRange() {
     const minInput = document.getElementById('powerRankingMinInput');
     const maxInput = document.getElementById('powerRankingMaxInput');
@@ -5387,6 +6073,7 @@ async function loadPowerRankings() {
 function installPowerRankingPanel() {
     loadAllianceLeaders();
     installSwordTaskPanel();
+    installThreeAllianceGroupPanel();
     const refreshButton = document.getElementById('refreshPowerRankingButton');
     if (refreshButton && refreshButton.dataset.bound !== 'true') {
         refreshButton.dataset.bound = 'true';

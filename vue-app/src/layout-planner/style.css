@@ -1601,6 +1601,7 @@ body.resizing {
 #rightSidebar.three-alliance-mode #citySettingsButtons,
 #rightSidebar.three-alliance-mode #anchorInputContainer,
 #rightSidebar.three-alliance-mode #teamManagementSection,
+#rightSidebar.sword-mode .three-alliance-group-panel,
 #mobileNav.three-alliance-mode .planner-mobile-building-nav,
 #mobilePanels.three-alliance-mode #mobileBuildings,
 #mobilePanels.three-alliance-mode .planner-map-mode,
@@ -1610,6 +1611,465 @@ body.resizing {
 #mobilePanels.three-alliance-mode #mobileCitySettingsButtons,
 #mobilePanels.three-alliance-mode #mobileTeamActions {
     display: none !important;
+}
+
+/* 三盟争霸分组面板 */
+.three-alliance-group-panel {
+    display: none;
+    min-height: 0;
+    padding: 14px;
+    border-bottom: 1px solid rgba(67, 80, 58, 0.14);
+    background:
+        radial-gradient(circle at top left, rgba(53, 139, 171, 0.2), transparent 34%),
+        rgba(255, 251, 242, 0.97);
+}
+
+#rightSidebar.three-alliance-mode .three-alliance-group-panel {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ta-legion-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin-bottom: 12px;
+    padding: 5px;
+    border: 1px solid rgba(67, 80, 58, 0.16);
+    border-radius: 9px;
+    background: #f2ead9;
+}
+
+.ta-legion-switch button {
+    min-height: 34px;
+    border: 0;
+    border-radius: 7px;
+    color: #5b664c;
+    background: rgba(255, 255, 255, 0.52);
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.ta-legion-switch button[aria-pressed="true"] {
+    color: #fff8df;
+    background: linear-gradient(135deg, #1f799d, #3a9bc0 52%, #155f7e);
+    box-shadow: 0 4px 12px rgba(20, 60, 80, 0.22);
+}
+
+.ta-roster-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+    border: 1px solid rgba(53, 139, 171, 0.2);
+    border-radius: 9px;
+    padding: 9px;
+    background: rgba(255, 253, 248, 0.72);
+}
+
+.ta-roster-summary span {
+    color: #1c4a5e;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.ta-roster-summary button {
+    height: 32px;
+    border: 0;
+    border-radius: 7px;
+    padding: 0 11px;
+    color: #fff8df;
+    background: linear-gradient(135deg, #2a7a9d, #1a5f7e);
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.ta-group-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ta-group-head p {
+    margin: 0 0 4px;
+    color: #1a6a8a;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+}
+
+.ta-group-head h2 {
+    margin: 0;
+    color: #1c4a5e;
+    font-size: 20px;
+    line-height: 1.1;
+}
+
+.ta-group-head__actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.ta-group-head__actions button {
+    height: 32px;
+    border: 0;
+    border-radius: 7px;
+    padding: 0 6px;
+    color: #302511;
+    background: linear-gradient(135deg, #fde68a, #d99a22);
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.ta-group-head__actions button:first-child {
+    color: #fff8df;
+    background: linear-gradient(135deg, #7b5a22, #d4a73c 54%, #6f4a1f) !important;
+    box-shadow: 0 4px 12px rgba(117, 78, 19, 0.18);
+}
+
+.ta-group-head__actions button:nth-child(2) {
+    color: #fff8df;
+    background: #8b3f37;
+}
+
+.ta-group-create {
+    flex: 0 0 auto;
+    margin-bottom: 10px;
+}
+
+.ta-group-create input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 34px;
+    border: 1px solid rgba(53, 139, 171, 0.2);
+    border-radius: 8px;
+    padding: 0 10px;
+    color: #1c4a5e;
+    background: rgba(255, 253, 248, 0.9);
+    font-size: 12px;
+    font-weight: 800;
+    outline: none;
+}
+
+.ta-group-create input:focus {
+    border-color: #3a9bc0;
+    box-shadow: 0 0 0 3px rgba(53, 139, 171, 0.14);
+}
+
+.ta-group-list {
+    display: grid;
+    flex: 1 1 auto;
+    gap: 10px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 2px;
+    padding-bottom: 80px;
+    scroll-padding-bottom: 80px;
+}
+
+.ta-group-item {
+    border: 1px solid rgba(53, 139, 171, 0.16);
+    border-radius: 9px;
+    padding: 10px;
+    background: rgba(255, 253, 248, 0.74);
+    box-shadow: 0 8px 22px rgba(35, 45, 28, 0.08);
+}
+
+.ta-group-title-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.ta-group-name {
+    box-sizing: border-box;
+    width: 100%;
+    height: 32px;
+    border: 1px solid rgba(53, 139, 171, 0.2);
+    border-radius: 7px;
+    padding: 0 10px;
+    color: #1c4a5e;
+    background: rgba(255, 253, 248, 0.9);
+    font-size: 12px;
+    font-weight: 800;
+    outline: none;
+}
+
+.ta-group-name:focus {
+    border-color: #3a9bc0;
+    box-shadow: 0 0 0 3px rgba(53, 139, 171, 0.14);
+}
+
+.ta-group-count {
+    color: #1c4a5e;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.ta-group-delete {
+    border: 0;
+    border-radius: 6px;
+    width: 26px;
+    height: 26px;
+    color: #fff;
+    background: #8b3f37;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.ta-group-members {
+    margin-bottom: 8px;
+}
+
+.ta-group-assign-button {
+    width: 100%;
+    height: 32px;
+    border: 0;
+    border-radius: 7px;
+    color: #302511;
+    background: linear-gradient(135deg, #fde68a, #d99a22);
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.ta-group-summary-text {
+    margin: 8px 0 0;
+    color: #1c4a5e;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.ta-group-hint {
+    margin: 6px 0 0;
+    color: rgba(47, 58, 42, 0.6);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* 已分配到其他组的成员高亮 */
+.sword-assign-member.is-assigned-elsewhere {
+    opacity: 0.6;
+}
+
+.sword-assign-member.is-assigned-elsewhere .sword-assign-member__body em {
+    color: #b85a2a;
+    font-weight: 900;
+}
+
+/* 三盟分组总览卡片 */
+.ta-group-card {
+    position: relative;
+    overflow: visible;
+    min-height: 118px;
+    border: 2px solid rgba(67, 80, 58, 0.16);
+    border-radius: 10px;
+    padding: 12px;
+    background: rgba(255, 253, 248, 0.9);
+    box-shadow: 0 10px 22px rgba(35, 45, 28, 0.06);
+}
+
+.ta-group-card-title {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-height: 34px;
+    margin-bottom: 10px;
+}
+
+.ta-group-card-title strong {
+    color: #293523;
+    font-size: 15px;
+    font-weight: 1000;
+    word-break: break-all;
+}
+
+.ta-group-card-title em {
+    color: #8a651a;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 1000;
+    white-space: nowrap;
+}
+
+/* 攻坚组 - 金色（神剑最高优先级） */
+.ta-group-card--attack {
+    border-color: rgba(217, 154, 34, 0.88);
+    background:
+        radial-gradient(circle at top left, rgba(253, 230, 138, 0.36), transparent 48%),
+        linear-gradient(135deg, rgba(255, 246, 205, 0.92), rgba(255, 253, 248, 0.82));
+    box-shadow:
+        0 0 0 1px rgba(255, 232, 130, 0.44),
+        0 12px 28px rgba(117, 78, 19, 0.18),
+        0 0 22px rgba(243, 192, 77, 0.22),
+        inset 0 0 0 1px rgba(255, 244, 188, 0.72);
+    animation: ta-group-gold-pulse 2.1s ease-in-out infinite;
+}
+
+.ta-group-card--attack::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: 0;
+    border-radius: 11px;
+    padding: 2px;
+    background:
+        conic-gradient(
+            from var(--leader-border-angle, 0deg),
+            rgba(255, 255, 255, 0.12),
+            rgba(253, 230, 138, 0.95),
+            rgba(217, 154, 34, 0.98),
+            rgba(139, 63, 55, 0.72),
+            rgba(255, 255, 255, 0.12)
+        );
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: leaderBorderSpin 4.2s linear infinite;
+}
+
+/* 防守组 - 蓝色发光 */
+.ta-group-card--defense {
+    border-color: rgba(20, 112, 176, 0.88);
+    background:
+        radial-gradient(circle at top left, rgba(68, 181, 255, 0.24), transparent 48%),
+        linear-gradient(135deg, rgba(220, 242, 255, 0.92), rgba(255, 253, 248, 0.82));
+    box-shadow:
+        0 0 0 1px rgba(68, 181, 255, 0.44),
+        0 12px 28px rgba(20, 60, 100, 0.18),
+        0 0 22px rgba(68, 181, 255, 0.22),
+        inset 0 0 0 1px rgba(180, 225, 255, 0.72);
+    animation: ta-group-blue-pulse 2.1s ease-in-out infinite;
+}
+
+.ta-group-card--defense::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: 0;
+    border-radius: 11px;
+    padding: 2px;
+    background:
+        conic-gradient(
+            from var(--leader-border-angle, 0deg),
+            rgba(255, 255, 255, 0.12),
+            rgba(68, 181, 255, 0.95),
+            rgba(20, 112, 176, 0.98),
+            rgba(10, 60, 120, 0.72),
+            rgba(255, 255, 255, 0.12)
+        );
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: leaderBorderSpin 4.2s linear infinite;
+}
+
+/* 支援组 - 绿色发光 */
+.ta-group-card--support {
+    border-color: rgba(56, 160, 80, 0.88);
+    background:
+        radial-gradient(circle at top left, rgba(100, 220, 130, 0.24), transparent 48%),
+        linear-gradient(135deg, rgba(220, 255, 230, 0.92), rgba(255, 253, 248, 0.82));
+    box-shadow:
+        0 0 0 1px rgba(100, 220, 130, 0.44),
+        0 12px 28px rgba(20, 80, 40, 0.18),
+        0 0 22px rgba(100, 220, 130, 0.22),
+        inset 0 0 0 1px rgba(180, 255, 200, 0.72);
+    animation: ta-group-green-pulse 2.1s ease-in-out infinite;
+}
+
+.ta-group-card--support::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: 0;
+    border-radius: 11px;
+    padding: 2px;
+    background:
+        conic-gradient(
+            from var(--leader-border-angle, 0deg),
+            rgba(255, 255, 255, 0.12),
+            rgba(100, 220, 130, 0.95),
+            rgba(56, 160, 80, 0.98),
+            rgba(20, 80, 40, 0.72),
+            rgba(255, 255, 255, 0.12)
+        );
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: leaderBorderSpin 4.2s linear infinite;
+}
+
+@keyframes ta-group-gold-pulse {
+    0%, 100% {
+        box-shadow:
+            0 0 0 1px rgba(255, 232, 130, 0.44),
+            0 12px 28px rgba(117, 78, 19, 0.16),
+            0 0 18px rgba(243, 192, 77, 0.18),
+            inset 0 0 0 1px rgba(255, 244, 188, 0.72);
+    }
+    50% {
+        box-shadow:
+            0 0 0 1px rgba(255, 232, 130, 0.6),
+            0 14px 32px rgba(117, 78, 19, 0.24),
+            0 0 28px rgba(243, 192, 77, 0.36),
+            inset 0 0 0 1px rgba(255, 244, 188, 0.9);
+    }
+}
+
+@keyframes ta-group-blue-pulse {
+    0%, 100% {
+        box-shadow:
+            0 0 0 1px rgba(68, 181, 255, 0.44),
+            0 12px 28px rgba(20, 60, 100, 0.16),
+            0 0 18px rgba(68, 181, 255, 0.18),
+            inset 0 0 0 1px rgba(180, 225, 255, 0.72);
+    }
+    50% {
+        box-shadow:
+            0 0 0 1px rgba(68, 181, 255, 0.6),
+            0 14px 32px rgba(20, 60, 100, 0.24),
+            0 0 28px rgba(68, 181, 255, 0.36),
+            inset 0 0 0 1px rgba(180, 225, 255, 0.9);
+    }
+}
+
+@keyframes ta-group-green-pulse {
+    0%, 100% {
+        box-shadow:
+            0 0 0 1px rgba(100, 220, 130, 0.44),
+            0 12px 28px rgba(20, 80, 40, 0.16),
+            0 0 18px rgba(100, 220, 130, 0.18),
+            inset 0 0 0 1px rgba(180, 255, 200, 0.72);
+    }
+    50% {
+        box-shadow:
+            0 0 0 1px rgba(100, 220, 130, 0.6),
+            0 14px 32px rgba(20, 80, 40, 0.24),
+            0 0 28px rgba(100, 220, 130, 0.36),
+            inset 0 0 0 1px rgba(180, 255, 200, 0.9);
+    }
 }
 
 .sword-task-head {

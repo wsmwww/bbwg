@@ -4,6 +4,9 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
+// 加载 vue-app/.env 中的环境变量（如 T2S_SIGN_SECRET）
+require('dotenv').config();
+
 const T2S_SIGN_SECRET = process.env.T2S_SIGN_SECRET || '';
 
 function createT2sSignHeaders(method, pathName) {

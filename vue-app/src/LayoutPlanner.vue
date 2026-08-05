@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 <!-- Fullscreen Canvas -->
     <canvas id="layoutCanvas"></canvas>
     <div id="shortcutToast" class="shortcut-toast"></div>
@@ -263,6 +263,91 @@
                         <button id="closeSwordTaskDrawerButton" type="button" aria-label="关闭">×</button>
                     </div>
                     <div id="swordTaskDrawerList" class="sword-task-drawer-list"></div>
+                </div>
+            </div>
+
+            <!-- 三盟争霸分组面板 -->
+            <section id="threeAllianceGroupPanel" class="three-alliance-group-panel" aria-label="三盟争霸分组">
+                <div class="ta-legion-switch" role="group" aria-label="三盟争霸军团切换">
+                    <button type="button" data-ta-legion="legion1" aria-pressed="true">军团1</button>
+                    <button type="button" data-ta-legion="legion2" aria-pressed="false">军团2</button>
+                </div>
+                <div class="ta-roster-summary">
+                    <span id="taRosterCount">军团1 报名 0 人</span>
+                    <button id="openTARosterButton" type="button">参战报名</button>
+                </div>
+                <div class="ta-group-head">
+                    <div>
+                        <p>THREE ALLIANCE GROUPS</p>
+                        <h2>分组列表</h2>
+                    </div>
+                    <div class="ta-group-head__actions">
+                        <button id="openTAGroupDrawerButton" type="button">分组总览</button>
+                        <button id="resetTAGroupsButton" type="button">重置分组</button>
+                        <button id="addTAGroupButton" type="button">新增分组</button>
+                    </div>
+                </div>
+                <div class="ta-group-create">
+                    <input id="newTAGroupNameInput" type="text" placeholder="例如：攻坚组 / 防守组 / 支援组" maxlength="24" />
+                </div>
+                <div id="taGroupList" class="ta-group-list"></div>
+                <p id="taGroupSummary" class="ta-group-summary-text">已报名 0 人 · 已分组 0 人 · 未分组 0 人</p>
+                <p class="ta-group-hint">先点击"参战报名"选择参战盟友，再点击各分组的"分配人员"将盟友分配到对应组。每人只能分配到一个分组。</p>
+            </section>
+
+            <!-- 三盟争霸报名弹窗 -->
+            <div id="threeAllianceRosterModal" class="sword-modal hidden" role="dialog" aria-modal="true" aria-labelledby="taRosterTitle">
+                <div class="sword-modal__panel">
+                    <div class="sword-modal__head">
+                        <div>
+                            <p>BATTLE ROSTER</p>
+                            <h2 id="taRosterTitle">三盟参战报名</h2>
+                        </div>
+                        <button id="closeTARosterModalButton" type="button" aria-label="关闭">×</button>
+                    </div>
+                    <div class="sword-modal__tools sword-roster-tools">
+                        <input id="taRosterSearchInput" type="text" placeholder="搜索联盟成员" />
+                        <div>
+                            <button id="selectFilteredTARosterButton" type="button">选择当前筛选</button>
+                            <button id="clearTARosterButton" type="button">清空报名</button>
+                        </div>
+                    </div>
+                    <div id="taRosterMemberList" class="sword-assign-list"></div>
+                </div>
+            </div>
+
+            <!-- 三盟争霸分组人员分配弹窗 -->
+            <div id="threeAllianceGroupModal" class="sword-modal hidden" role="dialog" aria-modal="true" aria-labelledby="taGroupTitle">
+                <div class="sword-modal__panel">
+                    <div class="sword-modal__head">
+                        <div>
+                            <p>GROUP ASSIGNMENT</p>
+                            <h2 id="taGroupTitle">分组人员分配</h2>
+                        </div>
+                        <button id="closeTAGroupModalButton" type="button" aria-label="关闭">×</button>
+                    </div>
+                    <div class="sword-modal__tools sword-roster-tools">
+                        <input id="taGroupSearchInput" type="text" placeholder="搜索已报名成员" />
+                        <div>
+                            <button id="selectFilteredTAGroupButton" type="button">选择当前筛选</button>
+                            <button id="clearTAGroupButton" type="button">清空本组</button>
+                        </div>
+                    </div>
+                    <div id="taGroupMemberList" class="sword-assign-list"></div>
+                </div>
+            </div>
+
+            <!-- 三盟争霸分组总览弹窗 -->
+            <div id="threeAllianceGroupDrawerModal" class="sword-modal hidden" role="dialog" aria-modal="true" aria-labelledby="taGroupDrawerTitle">
+                <div class="sword-modal__panel sword-modal__panel--wide">
+                    <div class="sword-modal__head">
+                        <div>
+                            <p>GROUP OVERVIEW</p>
+                            <h2 id="taGroupDrawerTitle">三盟分组总览</h2>
+                        </div>
+                        <button id="closeTAGroupDrawerButton" type="button" aria-label="关闭">×</button>
+                    </div>
+                    <div id="taGroupDrawerList" class="sword-task-drawer-list"></div>
                 </div>
             </div>
 
